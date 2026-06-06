@@ -1,0 +1,1758 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Wat Hoor Ik? — gehoortest + spraak-vervorming</title>
+<meta name="description" content="Wat Hoor Ik? — self-administered gehoortest (wizard + reactietijd + speakers/hoofdtelefoon + opties) + compenserende spraak-vervorming. Gratis. Alles blijft in je browser." />
+<link rel="canonical" href="https://wathoorik.nl/" />
+<style>
+  :root{
+    --bg:#0f172a; --panel:#111827; --panel2:#1f2937;
+    --text:#e5e7eb; --muted:#9ca3af; --line:#374151;
+    --accent:#38bdf8; --good:#22c55e; --warn:#f59e0b; --bad:#ef4444;
+    --ear-l:#3b82f6; --ear-r:#ef4444; --ear-b:#22c55e;
+    --card-radius:14px; --card-pad:16px;
+    --font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    --app-max:1100px; --app-gap:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font:14px/1.4 var(--font-family)}
+  header{padding:18px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#0b1224,#0f172a)}
+  header h1{margin:0;font-size:clamp(20px,3.2vw,30px)}
+  header .sub{color:var(--muted);font-size:13px;margin-top:4px}
+  header a{color:var(--accent);text-decoration:none}
+  main{max-width:var(--app-max);margin:0 auto;padding:18px;display:flex;flex-direction:column;gap:var(--app-gap)}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:6px}
+  .tab{padding:8px 14px;border-radius:10px 10px 0 0;background:var(--panel);color:var(--muted);cursor:pointer;border:1px solid var(--line);border-bottom:none;font-size:13px}
+  .tab.active{background:var(--panel2);color:var(--text);font-weight:600}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--card-radius);padding:var(--card-pad)}
+  .card h2{margin:0 0 8px 0;font-size:18px}
+  .card h3{margin:14px 0 6px 0;font-size:15px;color:var(--accent)}
+  .card p{margin:6px 0;color:var(--muted)}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  button{background:var(--accent);color:#001018;border:0;border-radius:10px;padding:10px 16px;font-weight:600;cursor:pointer;font-size:14px}
+  button.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+  button.good{background:var(--good);color:#001a07}
+  button.warn{background:var(--warn);color:#1a1100}
+  button.bad{background:var(--bad);color:#fff}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  input[type=range]{flex:1}
+  input[type=number]{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:6px 8px;width:90px}
+  select{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
+  .test-grid{display:grid;grid-template-columns:70px repeat(21,minmax(0,1fr));gap:2px;margin-top:10px;font-size:10px;text-align:center;overflow-x:auto}
+  .test-grid .head, .test-grid .cell{min-width:30px}
+  .test-grid .head{color:var(--muted);padding:4px;border-bottom:1px solid var(--line)}
+  .test-grid .cell{padding:6px 4px;border-radius:6px;background:var(--panel2);cursor:pointer;user-select:none}
+  .test-grid .cell:hover{outline:1px solid var(--accent)}
+  .test-grid .cell.done{background:#0b2c44}
+  .test-grid .cell.active{outline:2px solid var(--warn);background:#3a2a06}
+  .test-grid .ear-l{color:var(--ear-l);font-weight:600}
+  .test-grid .ear-r{color:var(--ear-r);font-weight:600}
+  .test-grid .ear-b{color:var(--ear-b);font-weight:600}
+  .test-ctrl{display:flex;gap:8px;align-items:center;margin-top:14px;padding:12px;background:var(--panel2);border-radius:10px}
+  .level-bar{flex:1;height:18px;background:#0a1422;border-radius:9px;overflow:hidden;border:1px solid var(--line)}
+  .level-fill{height:100%;background:linear-gradient(90deg,var(--good),var(--warn),var(--bad));width:0%;transition:width .2s}
+  .test-status{font-size:13px;color:var(--muted)}
+  canvas{display:block;max-width:100%;background:#0a1422;border-radius:8px;border:1px solid var(--line)}
+  .legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-top:6px;flex-wrap:wrap}
+  .legend .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:middle}
+  .disclaimer{background:#3a1a0a;border:1px solid var(--warn);border-radius:10px;padding:12px;color:#fde68a;font-size:13px}
+  .disclaimer strong{color:#fff}
+  table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
+  th,td{padding:6px 8px;text-align:left;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-weight:600}
+  .pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600}
+  .pill.normal{background:#0a3a1a;color:#86efac}
+  .pill.licht{background:#3a3a0a;color:#fde047}
+  .pill.matig{background:#3a200a;color:#fdba74}
+  .pill.ernstig{background:#3a0a0a;color:#fca5a5}
+  .pill.zwaar{background:#3a0a3a;color:#f0abfc}
+  .pill.partial{background:#3a3a4a;color:#cbd5e1;border:1px dashed #94a3b8}
+  .panel-section{display:none}
+  .panel-section.active{display:block}
+  footer{text-align:center;padding:18px;color:var(--muted);font-size:12px}
+  kbd{background:#1f2937;border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-size:12px;font-family:monospace}
+
+  /* ===== Wizard ===== */
+  .mode-toggle{display:flex;gap:6px;margin:10px 0;padding:6px;background:var(--panel2);border-radius:10px}
+  .mode-toggle label{flex:1;padding:10px;text-align:center;border-radius:8px;cursor:pointer;font-size:13px;border:1px solid transparent}
+  .mode-toggle label:has(input:checked){background:#0b2c44;border-color:var(--accent);font-weight:600}
+  .mode-toggle input{display:none}
+  .wiz-stage{padding:24px;background:var(--panel2);border-radius:12px;text-align:center;min-height:280px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .wiz-stage.flash{animation:wizFlash .4s}
+  @keyframes wizFlash{0%,100%{background:var(--panel2)}50%{background:#0b3a1a}}
+  .wiz-instruction{font-size:18px;color:var(--text);max-width:520px;margin:8px auto;line-height:1.5}
+  .wiz-big{font-size:32px;font-weight:700;color:var(--accent);margin:14px 0}
+  .wiz-meta{font-size:13px;color:var(--muted);margin-top:8px}
+  .wiz-progress{display:flex;gap:4px;margin-top:10px;flex-wrap:wrap;justify-content:center;max-width:700px}
+  .wiz-progress .dot{width:14px;height:14px;border-radius:50%;background:#1f2937;border:1px solid var(--line)}
+  .wiz-progress .dot.done{background:var(--good)}
+  .wiz-progress .dot.curr{background:var(--warn);outline:2px solid var(--warn)}
+  .wiz-progress .dot.partial{background:#94a3b8;border-style:dashed}
+  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:100}
+  .modal-backdrop.active{display:flex}
+  .modal{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:24px;max-width:420px;text-align:center}
+  .modal h3{margin-top:0}
+  .modal .row{justify-content:center}
+
+  /* ===== Multi-band editor ===== */
+  .band-row{display:grid;grid-template-columns:auto 130px 110px 110px 60px;gap:8px;align-items:center;margin-top:6px;padding:6px 8px;background:var(--panel2);border-radius:8px}
+  .band-row label{font-size:12px;color:var(--muted)}
+  .band-row .lbl{font-weight:600;color:var(--accent)}
+  .mode-radio{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+  .mode-radio label{padding:8px 12px;background:var(--panel2);border-radius:8px;border:1px solid var(--line);cursor:pointer;font-size:13px}
+  .mode-radio input{margin-right:6px}
+  .mode-radio label:has(input:checked){border-color:var(--accent);background:#0b2c44}
+</style>
+</head>
+<body>
+<header>
+  <h1>Wat Hoor Ik? <span style="color:var(--muted);font-size:14px;font-weight:400">v0.0.6-Bunch</span></h1>
+  <div class="sub">Self-administered gehoortest met reactietijd + compenserende spraak-vervorming · alles in je browser, niets naar een server · <a href="https://icthorse.nl/" target="_blank" rel="noopener">made by iCt Horse</a></div>
+</header>
+
+<main>
+  <div class="disclaimer">
+    <strong>Geen medisch hulpmiddel.</strong> HearHorse is een indicatief, educatief instrument. Resultaten zijn afhankelijk van je hoofdtelefoon/speakers, omgevingsgeluid en systeem-volume. Voor diagnose: audicien of KNO-arts.
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="wizard">1. Wizard-test</div>
+    <div class="tab" data-tab="manual" data-set="reference">2. Referentie</div>
+    <div class="tab" data-tab="manual" data-set="special">3. Speciaal</div>
+    <div class="tab" data-tab="report">4. Audiogram &amp; rapport</div>
+    <div class="tab" data-tab="speech">5. Spraak-vervorming</div>
+    <div class="tab" data-tab="info">6. Info</div>
+  </div>
+
+  <!-- ============== TAB 1: WIZARD ============== -->
+  <section class="panel-section active" id="panel-wizard">
+    <div class="card">
+      <h2>Wizard-hoortest (reactietijd-methode)</h2>
+      <p>Stap-voor-stap test. Per cel speelt er met willekeurige vertraging (1-6 sec) een korte toon. Druk <kbd>Spatie</kbd> of klik <strong>"Ik hoor het!"</strong> zo snel mogelijk na het horen van de toon. Na 6 sec wordt gevraagd of je iets hoorde. ~10% van de trials zijn controle-trials zonder toon.</p>
+
+      <div class="mode-toggle">
+        <label><input type="radio" name="wizMode" value="headphones" checked /><strong>🎧 Hoofdtelefoon</strong><br><small style="color:var(--muted)">Linker en rechter oor apart getest (16 cellen, ~10 min)</small></label>
+        <label><input type="radio" name="wizMode" value="speakers" /><strong>🔊 Speakers</strong><br><small style="color:var(--muted)">Beide oren samen via luidsprekers (8 cellen, ~5 min)</small></label>
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <button id="wizCalStart">▶ 1 kHz kalibratie</button>
+        <button id="wizCalStop" class="secondary">■ Stop</button>
+        <span class="test-status" id="wizCalStatus">Stel je volume in op comfortabel zacht</span>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h2>Test in uitvoering</h2>
+      <div class="row" style="justify-content:space-between">
+        <div class="row">
+          <button id="wizStart" class="good">▶ Start wizard-test</button>
+          <button id="wizStop" class="warn" disabled>■ Stop &amp; bewaar partial</button>
+          <button id="wizReset" class="secondary">↻ Reset wizard-data</button>
+        </div>
+        <span class="test-status" id="wizMetaTop">Niet gestart</span>
+      </div>
+
+      <div class="wiz-stage" id="wizStage" style="margin-top:14px">
+        <div class="wiz-instruction" id="wizInstruction">Kies hoofdtelefoon of speakers hierboven, dan "Start wizard-test".</div>
+        <div class="wiz-big" id="wizBig"></div>
+        <button id="wizHearBtn" class="good" style="margin-top:14px;display:none;font-size:18px;padding:14px 32px">🎧 Ik hoor het!</button>
+        <div class="wiz-meta" id="wizMetaBottom"></div>
+      </div>
+
+      <div class="wiz-progress" id="wizProgress"></div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h2>Test-opties</h2>
+      <div class="row">
+        <label style="min-width:170px">⏱ Testduur (max):</label>
+        <input type="range" id="optMaxDur" min="1" max="20" step="1" value="10" />
+        <input type="number" id="optMaxDurNum" min="1" max="20" step="1" value="10" />
+        <span class="test-status">minuten — wizard stopt automatisch en bewaart partial</span>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <label><input type="checkbox" id="optFlash" checked /> 🟢 Groene flits zichtbaar bij toonafspelen <small style="color:var(--muted)">— uit zetten bij zelf-test om oog-training te vermijden</small></label>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <label><input type="checkbox" id="optAskConfirm" checked /> 💬 Bevestiging vragen na 6 sec <small style="color:var(--muted)">— uit = direct "niet gehoord", sneller en oog-blind</small></label>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== TAB 2: MANUAL ============== -->
+  <section class="panel-section" id="panel-manual">
+    <div class="card">
+      <h2 id="manualHeading">Referentie-modus (ISO 8253-1 standaard)</h2>
+      <p id="manualIntro">Klinische standaard puretone-audiometrie: 11 frequenties op de ISO 8253-1 / ANSI S3.21 standaard. Per oor selecteer je een cel, gebruik slider/getal of presets om het niveau in te stellen waarop de toon nét hoorbaar is.</p>
+      <p style="margin-top:6px;font-size:12px;color:var(--muted)" id="manualStandardsNote">Standaard PTA-banden: 125-8000 Hz (octaaf-stappen) + halve octaven 750/1500/3000/6000 Hz voor interpolatie. Bron: ISO 8253-1:2010 — Acoustics — Audiometric test methods.</p>
+      <div class="row">
+        <button id="calStart">▶ Speel 1 kHz referentie</button>
+        <button id="calStop" class="secondary">■ Stop</button>
+        <span class="test-status" id="calStatus">Niet gestart</span>
+      </div>
+
+      <div class="test-grid" id="testGrid"></div>
+
+      <div class="test-ctrl">
+        <button id="btnQuieter" class="secondary" disabled>− 1%</button>
+        <input type="number" id="levelNum" min="0" max="100" step="1" value="0" disabled style="width:80px" />
+        <button id="btnLouder" class="warn" disabled>+ 1%</button>
+        <button id="btnToneToggle" class="secondary" disabled title="toon aan/uit">🔇 aan/uit</button>
+        <input type="range" id="levelSlider" min="1" max="100" step="1" value="10" disabled style="flex:1" />
+        <span class="test-status" id="testStatus">Selecteer een cel</span>
+        <button id="btnHear" class="good" disabled>✓ ik hoor het</button>
+        <button id="btnSkip" class="secondary" disabled>⤳ overslaan</button>
+      </div>
+
+      <div class="row" style="margin-top:8px;padding:8px 12px;background:var(--panel2);border-radius:10px">
+        <span style="color:var(--muted);font-size:13px;min-width:100px">Snel naar:</span>
+        <button class="secondary preset-btn" data-level="20" disabled>laag (20%)</button>
+        <button class="secondary preset-btn" data-level="50" disabled>middel (50%)</button>
+        <button class="secondary preset-btn" data-level="80" disabled>hoog (80%)</button>
+        <button class="secondary preset-btn" data-level="100" disabled>maximaal (100%)</button>
+      </div>
+
+      <div class="row" style="margin-top:14px">
+        <button id="btnReset" class="bad">↻ alle metingen wissen</button>
+        <button id="btnGoReport" class="secondary">→ naar audiogram</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== TAB 3: AUDIOGRAM ============== -->
+  <section class="panel-section" id="panel-report">
+    <div class="card">
+      <h2>Audiogram</h2>
+      <p>Klinische conventie: lager op de grafiek = slechter horen. Blauw = links, rood = rechts, groen = beide (speakers). Stippellijn = partial (test gestopt voor convergentie).</p>
+      <canvas id="audiogramCanvas" width="900" height="420"></canvas>
+      <div class="legend">
+        <span><span class="dot" style="background:var(--ear-l)"></span>Links (○ wizard, ◇ manual)</span>
+        <span><span class="dot" style="background:var(--ear-r)"></span>Rechts (× wizard, ◇ manual)</span>
+        <span><span class="dot" style="background:var(--ear-b)"></span>Beide (▲ speakers)</span>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h2>Reactietijden (uit wizard)</h2>
+      <p>Gemiddelde reactietijd in ms per cel. Snellere reactie = duidelijker gehoord.</p>
+      <canvas id="rtCanvas" width="900" height="240"></canvas>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h2>Detail-tabel</h2>
+      <div id="reportTableWrap"></div>
+      <p style="margin-top:8px;font-size:12px"><strong>Betrouwbaarheid wizard:</strong> <span id="reliability">—</span></p>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h2>Conclusie</h2>
+      <div id="conclusion" style="line-height:1.6"></div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h2>Rapport-export</h2>
+      <div class="row">
+        <button id="btnPdf">⤓ PDF-rapport downloaden</button>
+        <button id="btnJsonExport" class="secondary">⤓ JSON-export</button>
+        <button id="btnJsonImport" class="secondary">⤒ JSON-import</button>
+        <input type="file" id="fileImport" accept="application/json" style="display:none" />
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== TAB 4: SPRAAK-VERVORMING ============== -->
+  <section class="panel-section" id="panel-speech">
+    <div class="card">
+      <h2>Opname</h2>
+      <p>Spreek een kort bericht in (max 30 sec). Verschillende vervormingsmodi gebruiken jouw test-resultaat op een eigen manier.</p>
+      <div class="row">
+        <button id="recStart" class="good">● Start opname</button>
+        <button id="recStop" class="bad" disabled>■ Stop</button>
+        <span class="test-status" id="recStatus">Geen opname</span>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <audio id="audioOrig" controls style="flex:1"></audio>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h2>Vervormings-modus</h2>
+      <div class="mode-radio">
+        <label><input type="radio" name="speechMode" value="audiogram" checked />Audiogram-EQ</label>
+        <label><input type="radio" name="speechMode" value="single" />Single pitch-shift</label>
+        <label><input type="radio" name="speechMode" value="multi" />Multi-band (zelf samenstellen)</label>
+        <label><input type="radio" name="speechMode" value="auto" />Auto-comfort (uit test)</label>
+      </div>
+
+      <div id="modeSingle" class="row" style="display:none;margin-top:10px;padding:12px;background:var(--panel2);border-radius:10px">
+        <label style="min-width:120px">Pitch-shift:</label>
+        <input type="range" id="shiftSemis" min="-12" max="12" step="1" value="-3" />
+        <input type="number" id="shiftSemisNum" min="-12" max="12" step="1" value="-3" />
+        <span class="test-status">semitonen (negatief = omlaag/dieper, tempo verandert mee)</span>
+      </div>
+
+      <div id="modeMulti" style="display:none;margin-top:10px;padding:12px;background:var(--panel2);border-radius:10px">
+        <div class="row" style="justify-content:space-between">
+          <strong>Banden (boost / dempen / shift):</strong>
+          <button id="btnAddBand" class="secondary">+ band toevoegen</button>
+        </div>
+        <div id="bandsContainer" style="margin-top:8px"></div>
+        <p style="font-size:12px;color:var(--muted);margin-top:8px"><strong>Type</strong>: <em>boost</em> = peaking EQ rond freq. <em>shift</em> = pitch-shift binnen bandpass.</p>
+      </div>
+
+      <div id="modeAuto" style="display:none;margin-top:10px;padding:12px;background:var(--panel2);border-radius:10px">
+        <p style="margin:0">Auto-comfort genereert een multi-band profiel op basis van je test-data. Slecht gehoorde banden worden eerst geboost; bij ernstige hoge-freq-loss extra omlaag-shift.</p>
+        <p style="margin-top:8px"><strong>Berekend profiel:</strong></p>
+        <div id="autoProfileDisplay" style="font-family:monospace;font-size:12px;background:#0a1422;padding:8px;border-radius:6px;border:1px solid var(--line)">Nog geen test-data beschikbaar.</div>
+      </div>
+
+      <div class="row" style="margin-top:14px">
+        <button id="btnProcess" disabled>⚙ Verwerk volgens gekozen modus</button>
+        <button id="btnDownload" class="secondary" disabled>⤓ Download bewerkt (WAV)</button>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <audio id="audioProcessed" controls style="flex:1"></audio>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== TAB 5: INFO ============== -->
+  <section class="panel-section" id="panel-info">
+    <div class="card">
+      <h2>Wat is "Wat Hoor Ik?"?</h2>
+      <ul>
+        <li><strong>Wizard-test</strong> met reactietijd: per (oor/beide, freq) random delay 1-6 sec, druk zodra je toon hoort. Catch-trials meten je betrouwbaarheid.</li>
+        <li><strong>Twee test-modes:</strong> <em>hoofdtelefoon</em> (L en R apart, 16 cellen, ~10 min) of <em>speakers</em> (beide oren samen, 8 cellen, ~5 min, sneller maar geen L/R-diagnose).</li>
+        <li><strong>Stop &amp; bewaar partial:</strong> stop midden in de test → wat al gemeten is wordt bewaard als drempel-schatting (gemarkeerd als partial).</li>
+        <li><strong>Manual-modus</strong> als snelle expert-flow.</li>
+        <li><strong>4 vervormings-modi</strong>: audiogram-EQ · single pitch-shift · multi-band editor · auto-comfort.</li>
+      </ul>
+      <h2 style="margin-top:14px">Wat het niet is</h2>
+      <ul>
+        <li>Geen diagnostisch instrument (vereist gekalibreerde transducers + geluiddichte cabine).</li>
+        <li>Geen hoorapparaat-vervanging.</li>
+        <li>Geen vervanging van audicien of KNO.</li>
+      </ul>
+      <h2 style="margin-top:14px">Methodologie</h2>
+      <ul>
+        <li><strong>Aantal trials:</strong> per cel verwacht 5-8 (worst case cap 14). Bij hoofdtelefoon-mode: ~110-140 trials totaal incl. ~10% catch-trials. Speakers-mode: ~55-70 trials.</li>
+        <li><strong>Niveau-adjust:</strong> Hughson-Westlake-light — 10% omlaag bij gehoord, 10% omhoog bij niet (alles in 10%-grid). 2× hit op zelfde niveau = drempel.</li>
+        <li><strong>Catch-trials</strong> (~10%): geen toon afgespeeld. Druk = false positive. Te hoge rate = gok-gedrag = onbetrouwbaar.</li>
+        <li><strong>Reactietijd:</strong> &lt;300ms duidelijk · 300-800ms normaal · 800-1500ms twijfel · &gt;1500ms grens · postAnswer "ja" = grensgeval · "nee" = niet hoorbaar.</li>
+        <li><strong>Volgorde:</strong> interleaved random — geen patroon-leren.</li>
+        <li><strong>Partial:</strong> bij Stop worden niet-bevestigde cellen met ≥1 hit opgeslagen met laatst-gehoorde-niveau als schatting (gemarkeerd in audiogram met stippellijn).</li>
+      </ul>
+      <h2 style="margin-top:14px">Versie</h2>
+      <p>v0.0.6-Bunch — Cyril G. Bunch (eerste klinische audiogram 1923, inrichter PTA-conventies). Voorgangers: Békésy → Fletcher → Carhart → Stevens → Munson.</p>
+      <h2 style="margin-top:14px">Bron</h2>
+      <p><strong><a href="https://wathoorik.nl/">wathoorik.nl</a></strong> · open source op <a href="https://github.com/cpaglebbeek/WatHoorIk" target="_blank" rel="noopener">github.com/cpaglebbeek/WatHoorIk</a> · AGPL-3.0 · made by <a href="https://icthorse.nl/" target="_blank" rel="noopener">iCt Horse</a> · alle data blijft in je browser.</p>
+    </div>
+  </section>
+
+  <footer>
+    Wat Hoor Ik? · v0.0.6-Bunch · © 2026 · open source AGPL-3.0 · <a href="https://github.com/cpaglebbeek/WatHoorIk" style="color:var(--muted)">GitHub</a> · alle data blijft lokaal in je browser
+  </footer>
+</main>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <h3 id="modalTitle">Hoorde u een toon?</h3>
+    <p id="modalText">Er werd geen druk geregistreerd. Hoorde u iets of niet?</p>
+    <div class="row">
+      <button id="modalYes" class="good">Ja, ik hoorde iets</button>
+      <button id="modalNo" class="bad">Nee, niets gehoord</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ====================================================================
+   HearHorse v0.0.6-Bunch
+   ==================================================================== */
+
+const FREQS = [125, 250, 500, 1000, 2000, 4000, 6000, 8000];
+// Klinische standaard PTA — ISO 8253-1 / ANSI S3.21
+const REFERENCE_FREQS = [125, 250, 500, 750, 1000, 1500, 2000, 3000, 4000, 6000, 8000];
+// Uitgebreid spectrum 10Hz-20kHz
+const SPECIAL_FREQS = [10, 20, 40, 50, 70, 80, 90, 100, 110, 120, 125, 250, 500, 1000, 2000, 4000, 6000, 8000, 12000, 16000, 20000];
+// Audiogram + rapport-tabel tonen alle data → gebruik union (special is superset met REFERENCE_FREQS' extra: 750/1500/3000)
+const ALL_FREQS = Array.from(new Set([...SPECIAL_FREQS, ...REFERENCE_FREQS])).sort((a,b)=>a-b);
+const EARS = ['L', 'R'];
+const MANUAL_EARS = ['L', 'R', 'B'];
+const LS_KEY = 'hearhorse_v3';
+
+const state = {
+  thresholds: {},                  // manual: "L_1000": 35
+  wizard: {
+    mode: 'headphones',            // 'headphones' | 'speakers'
+    trials: {},                    // "L_1000": [{level, delayMs, pressed, rtMs, postAnswer, catch}]
+    thresholds: {},                // "L_1000": 35
+    avgRT: {},                     // "L_1000": 420
+    partial: {},                   // "L_1000": true if not converged
+    catchTrials: 0,
+    catchPressed: 0,
+    options: {
+      flashOn: true,               // green flash on tone-play
+      askConfirm: true,            // modal after 6s timeout
+      maxDurationMin: 10,          // hard cap
+    },
+  },
+  currentTest: null,
+  recordedBlob: null,
+  processedBlob: null,
+  speechMode: 'audiogram',
+  manualFreqSet: 'reference',     // 'reference' | 'special'
+  bands: [
+    { freq: 1000, type: 'boost', value: 6 },
+    { freq: 4000, type: 'boost', value: 12 },
+  ],
+};
+
+function saveState(){
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify({
+      thresholds: state.thresholds,
+      wizard: state.wizard,
+      bands: state.bands,
+      manualFreqSet: state.manualFreqSet,
+    }));
+  } catch(e){}
+}
+function loadState(){
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    if (d.thresholds) state.thresholds = d.thresholds;
+    if (d.wizard) state.wizard = Object.assign(state.wizard, d.wizard);
+    if (!state.wizard.partial) state.wizard.partial = {};
+    if (!state.wizard.options) state.wizard.options = { flashOn: true, askConfirm: true, maxDurationMin: 10 };
+    if (state.wizard.options.flashOn == null) state.wizard.options.flashOn = true;
+    if (state.wizard.options.askConfirm == null) state.wizard.options.askConfirm = true;
+    if (state.wizard.options.maxDurationMin == null) state.wizard.options.maxDurationMin = 10;
+    if (d.bands) state.bands = d.bands;
+    if (d.manualFreqSet) state.manualFreqSet = d.manualFreqSet;
+  } catch(e){}
+}
+
+function currentManualFreqs(){
+  return state.manualFreqSet === 'special' ? SPECIAL_FREQS : REFERENCE_FREQS;
+}
+
+/* ====================================================================
+   AUDIO ENGINE
+   ==================================================================== */
+let audioCtx = null;
+function getCtx(){
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function levelToGain(pct){
+  if (pct <= 0) return 0;
+  const dB = -60 + (pct/100) * 60;
+  return 0.5 * Math.pow(10, dB/20);
+}
+
+function earPan(ear){
+  if (ear === 'L') return -1;
+  if (ear === 'R') return 1;
+  return 0; // 'B' = both/center
+}
+function earLabel(ear){
+  return ear === 'L' ? 'Links' : (ear === 'R' ? 'Rechts' : 'Beide');
+}
+function earColor(ear){
+  return ear === 'L' ? '#3b82f6' : (ear === 'R' ? '#ef4444' : '#22c55e');
+}
+
+let calOsc = null, calGain = null;
+function calPlayTone(targetStatusId){
+  const ctx = getCtx();
+  calStopTone();
+  calOsc = ctx.createOscillator();
+  calGain = ctx.createGain();
+  calOsc.frequency.value = 1000;
+  calOsc.type = 'sine';
+  calGain.gain.value = 0.05;
+  calOsc.connect(calGain).connect(ctx.destination);
+  calOsc.start();
+  if (targetStatusId) document.getElementById(targetStatusId).textContent = '1 kHz speelt op referentievolume';
+}
+function calStopTone(){
+  if (calOsc){ try{calOsc.stop()}catch(e){} calOsc.disconnect(); calOsc = null; }
+  if (calGain){ calGain.disconnect(); calGain = null; }
+}
+
+let testOsc = null, testGain = null, testPan = null;
+function testStartTone(freq, ear, levelPct){
+  const ctx = getCtx();
+  testStopTone();
+  testOsc = ctx.createOscillator();
+  testGain = ctx.createGain();
+  testPan = ctx.createStereoPanner();
+  testOsc.frequency.value = freq;
+  testOsc.type = 'sine';
+  testPan.pan.value = earPan(ear);
+  testGain.gain.value = levelToGain(levelPct);
+  testOsc.connect(testGain).connect(testPan).connect(ctx.destination);
+  testOsc.start();
+}
+function testSetLevel(levelPct){
+  if (!testGain) return;
+  testGain.gain.setTargetAtTime(levelToGain(levelPct), getCtx().currentTime, 0.02);
+}
+function testStopTone(){
+  if (testOsc){ try{testOsc.stop()}catch(e){} testOsc.disconnect(); testOsc = null; }
+  if (testGain){ testGain.disconnect(); testGain = null; }
+  if (testPan){ testPan.disconnect(); testPan = null; }
+}
+
+function wizardPlayTone(freq, ear, levelPct){
+  const ctx = getCtx();
+  const now = ctx.currentTime;
+  const dur = 1.0;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  const pan = ctx.createStereoPanner();
+  osc.frequency.value = freq;
+  osc.type = 'sine';
+  pan.pan.value = earPan(ear);
+  const peak = levelToGain(levelPct);
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(peak, now + 0.05);
+  gain.gain.setValueAtTime(peak, now + dur - 0.05);
+  gain.gain.linearRampToValueAtTime(0, now + dur);
+  osc.connect(gain).connect(pan).connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + dur + 0.02);
+  return new Promise(resolve => setTimeout(resolve, dur*1000 + 20));
+}
+
+/* ====================================================================
+   MANUAL TEST
+   ==================================================================== */
+function buildTestGrid(){
+  const grid = document.getElementById('testGrid');
+  if (!grid) return;
+  const freqs = currentManualFreqs();
+  grid.style.gridTemplateColumns = `70px repeat(${freqs.length}, minmax(0, 1fr))`;
+  grid.innerHTML = '';
+  const empty = document.createElement('div'); empty.className = 'head'; grid.appendChild(empty);
+  freqs.forEach(f => {
+    const c = document.createElement('div');
+    c.className = 'head';
+    c.textContent = f >= 1000 ? (f/1000) + 'k' : f;
+    grid.appendChild(c);
+  });
+  MANUAL_EARS.forEach(ear => {
+    const lbl = document.createElement('div');
+    lbl.className = 'head ' + (ear === 'L' ? 'ear-l' : ear === 'R' ? 'ear-r' : 'ear-b');
+    lbl.textContent = ear === 'L' ? 'Linker' : ear === 'R' ? 'Rechter' : 'Beide';
+    grid.appendChild(lbl);
+    freqs.forEach(f => {
+      const c = document.createElement('div');
+      c.className = 'cell';
+      c.dataset.ear = ear; c.dataset.freq = f;
+      const key = ear + '_' + f;
+      if (state.thresholds[key] != null){
+        c.textContent = state.thresholds[key] + '%';
+        c.classList.add('done');
+      } else c.textContent = '—';
+      c.addEventListener('click', () => startCell(ear, f));
+      grid.appendChild(c);
+    });
+  });
+}
+
+function startCell(ear, freq){
+  document.querySelectorAll('#testGrid .cell').forEach(c => c.classList.remove('active'));
+  const cell = document.querySelector(`#testGrid .cell[data-ear="${ear}"][data-freq="${freq}"]`);
+  if (cell) cell.classList.add('active');
+  state.currentTest = { ear, freq, level: 10, toneOn: true };
+  updateManualUI();
+  testStartTone(freq, ear, 10);
+}
+
+function updateManualUI(){
+  const t = state.currentTest;
+  const status = document.getElementById('testStatus');
+  const slider = document.getElementById('levelSlider');
+  const num = document.getElementById('levelNum');
+  const btnTog = document.getElementById('btnToneToggle');
+  const btns = ['btnQuieter','btnLouder','btnHear','btnSkip','btnToneToggle','levelSlider','levelNum'].map(id => document.getElementById(id));
+  const presets = document.querySelectorAll('.preset-btn');
+  if (!t){
+    if (slider) slider.value = 0;
+    if (num) num.value = 0;
+    if (btnTog) btnTog.textContent = '🔇 aan/uit';
+    status.textContent = 'Selecteer een cel';
+    btns.forEach(b => b && (b.disabled = true));
+    presets.forEach(b => b.disabled = true);
+    return;
+  }
+  if (slider) slider.value = t.level;
+  if (num) num.value = t.level;
+  if (btnTog) btnTog.textContent = t.toneOn ? '🔊 toon AAN' : '🔇 toon UIT';
+  const lbl = t.freq >= 1000 ? (t.freq/1000)+' kHz' : t.freq+' Hz';
+  status.textContent = `${earLabel(t.ear)} · ${lbl} · niveau ${t.level}%${t.toneOn ? '' : ' (gemute)'}`;
+  btns.forEach(b => b && (b.disabled = false));
+  presets.forEach(b => b.disabled = false);
+}
+function setManualLevel(pct){
+  if (!state.currentTest) return;
+  state.currentTest.level = Math.max(1, Math.min(100, Math.round(pct)));
+  if (state.currentTest.toneOn) testSetLevel(state.currentTest.level);
+  updateManualUI();
+}
+function toggleManualTone(){
+  if (!state.currentTest) return;
+  state.currentTest.toneOn = !state.currentTest.toneOn;
+  if (state.currentTest.toneOn){
+    // restart at current level (toon was off → gain 0)
+    testStartTone(state.currentTest.freq, state.currentTest.ear, state.currentTest.level);
+  } else {
+    testStopTone();
+  }
+  updateManualUI();
+}
+function adjustLevel(delta){
+  if (!state.currentTest) return;
+  state.currentTest.level = Math.max(1, Math.min(100, state.currentTest.level + delta));
+  if (state.currentTest.toneOn) testSetLevel(state.currentTest.level);
+  updateManualUI();
+}
+function recordHearManual(){
+  if (!state.currentTest) return;
+  const { ear, freq, level } = state.currentTest;
+  state.thresholds[ear + '_' + freq] = level;
+  saveState();
+  testStopTone();
+  state.currentTest = null;
+  buildTestGrid();
+  updateManualUI();
+}
+function skipCellManual(){
+  if (!state.currentTest) return;
+  testStopTone();
+  state.currentTest = null;
+  updateManualUI();
+}
+function resetAllManual(){
+  if (!confirm('Alle manual-metingen wissen?')) return;
+  state.thresholds = {};
+  state.currentTest = null;
+  saveState();
+  testStopTone();
+  buildTestGrid();
+  updateManualUI();
+  renderReport();
+}
+
+/* ====================================================================
+   WIZARD ENGINE
+   ==================================================================== */
+const wiz = {
+  active: false,
+  cellState: {},
+  trialIdx: 0,
+  currentTrial: null,
+  toneStartedAt: null,
+  pressTimer: null,
+  awaitingAnswer: false,
+  durationTimer: null,
+  startedAt: null,
+  countdownTimer: null,
+};
+
+function wizardEars(){
+  return state.wizard.mode === 'speakers' ? ['B'] : ['L', 'R'];
+}
+function wizardCells(){
+  const result = [];
+  wizardEars().forEach(e => FREQS.forEach(f => result.push({ ear: e, freq: f })));
+  return result;
+}
+
+function wizardBuildQueue(){
+  wiz.cellState = {};
+  wizardCells().forEach(c => {
+    wiz.cellState[c.ear+'_'+c.freq] = { level: 50, consecutiveHits: 0, lastHitLevel: null, done: false, trialCount: 0 };
+  });
+  // Round all initial levels to multiples of 10 (already 50, but defensive)
+  state.wizard.trials = {};
+  state.wizard.catchTrials = 0;
+  state.wizard.catchPressed = 0;
+  wizardCells().forEach(c => { state.wizard.trials[c.ear+'_'+c.freq] = []; });
+}
+
+function wizardPickNextCell(){
+  const undone = [];
+  wizardCells().forEach(c => {
+    const cs = wiz.cellState[c.ear+'_'+c.freq];
+    if (cs && !cs.done) undone.push(c);
+  });
+  if (undone.length === 0) return null;
+  return undone[Math.floor(Math.random()*undone.length)];
+}
+
+function wizardStart(){
+  if (wiz.active) return;
+  // clear existing wizard data for selected mode (don't touch other-mode data)
+  wizardEars().forEach(e => FREQS.forEach(f => {
+    const k = e+'_'+f;
+    delete state.wizard.thresholds[k];
+    delete state.wizard.avgRT[k];
+    delete state.wizard.partial[k];
+  }));
+  wizardBuildQueue();
+  wiz.active = true;
+  wiz.trialIdx = 0;
+  wiz.startedAt = performance.now();
+  document.getElementById('wizStart').disabled = true;
+  document.getElementById('wizStop').disabled = false;
+  document.getElementById('wizMetaTop').textContent = 'Test gestart (' + (state.wizard.mode === 'speakers' ? '🔊 speakers' : '🎧 hoofdtelefoon') + ')';
+  // disable mode-toggle and options during run
+  document.querySelectorAll('input[name="wizMode"]').forEach(r => r.disabled = true);
+  ['optFlash','optAskConfirm','optMaxDur','optMaxDurNum'].forEach(id => { const el = document.getElementById(id); if (el) el.disabled = true; });
+  // hard timer
+  const maxMs = (state.wizard.options.maxDurationMin || 10) * 60 * 1000;
+  wiz.durationTimer = setTimeout(() => {
+    if (wiz.active){
+      document.getElementById('wizInstruction').textContent = `⏱ Maximale testduur (${state.wizard.options.maxDurationMin} min) bereikt. Partial bewaard.`;
+      wizardStop();
+    }
+  }, maxMs);
+  // countdown display
+  wiz.countdownTimer = setInterval(() => {
+    if (!wiz.active) return;
+    const elapsed = (performance.now() - wiz.startedAt) / 1000;
+    const remain = Math.max(0, (state.wizard.options.maxDurationMin || 10) * 60 - elapsed);
+    const mm = Math.floor(remain/60), ss = Math.floor(remain%60).toString().padStart(2,'0');
+    document.getElementById('wizMetaTop').textContent = `Test loopt · ${mm}:${ss} resterend`;
+  }, 1000);
+  wizardNextTrial();
+}
+
+function wizardStop(){
+  wiz.active = false;
+  if (wiz.pressTimer){ clearTimeout(wiz.pressTimer); wiz.pressTimer = null; }
+  if (wiz.durationTimer){ clearTimeout(wiz.durationTimer); wiz.durationTimer = null; }
+  if (wiz.countdownTimer){ clearInterval(wiz.countdownTimer); wiz.countdownTimer = null; }
+  hideModal();
+  document.getElementById('wizStart').disabled = false;
+  document.getElementById('wizStop').disabled = true;
+  document.getElementById('wizHearBtn').style.display = 'none';
+  document.querySelectorAll('input[name="wizMode"]').forEach(r => r.disabled = false);
+  ['optFlash','optAskConfirm','optMaxDur','optMaxDurNum'].forEach(id => { const el = document.getElementById(id); if (el) el.disabled = false; });
+  // Save partial results: unfinished cells with ≥1 hit get lastHitLevel as estimate
+  let partialCount = 0, savedCount = 0;
+  for (const key in wiz.cellState){
+    const cs = wiz.cellState[key];
+    if (cs.done) continue;
+    if (cs.lastHitLevel != null){
+      state.wizard.thresholds[key] = cs.lastHitLevel;
+      state.wizard.partial[key] = true;
+      partialCount++;
+    } else if (cs.trialCount > 0){
+      // Has trials but no hit at all → assume not hearable at tested range
+      // Use highest tested level + 5 (capped at 100) as conservative estimate
+      state.wizard.thresholds[key] = 100;
+      state.wizard.partial[key] = true;
+      partialCount++;
+    }
+    savedCount++;
+  }
+  document.getElementById('wizInstruction').textContent = `Test gestopt. ${partialCount} cel${partialCount===1?'':'len'} bewaard als partial schatting.`;
+  document.getElementById('wizBig').textContent = '✓';
+  document.getElementById('wizMetaBottom').textContent = '';
+  wizardComputeResults();
+  saveState();
+  renderReport();
+  wizardRenderProgress();
+}
+
+async function wizardNextTrial(){
+  if (!wiz.active) return;
+  const cell = wizardPickNextCell();
+  if (!cell){ wizardFinish(); return; }
+  const isCatch = Math.random() < 0.10;
+  const cs = wiz.cellState[cell.ear+'_'+cell.freq];
+  const level = isCatch ? 0 : cs.level;
+  wiz.currentTrial = {
+    ear: cell.ear, freq: cell.freq, level,
+    catch: isCatch,
+    delayMs: 1000 + Math.random() * 5000,
+    pressed: false, rtMs: null, postAnswer: null,
+  };
+  wiz.trialIdx++;
+  const inst = document.getElementById('wizInstruction');
+  const big = document.getElementById('wizBig');
+  const meta = document.getElementById('wizMetaBottom');
+  const hearBtn = document.getElementById('wizHearBtn');
+  inst.textContent = 'Luister goed... Druk op SPATIE of "Ik hoor het!" zo snel mogelijk na een toon.';
+  big.textContent = state.wizard.mode === 'speakers' ? '🔊' : '🎧';
+  const earTxt = earLabel(cell.ear);
+  meta.textContent = `Trial ${wiz.trialIdx} · ${earTxt} · ${cell.freq>=1000?(cell.freq/1000)+' kHz':cell.freq+' Hz'} · niveau ${level}%${isCatch?' · CONTROLE':''}`;
+  hearBtn.style.display = 'inline-block';
+  document.getElementById('wizStage').classList.remove('flash');
+  wizardRenderProgress();
+  await new Promise(r => setTimeout(r, wiz.currentTrial.delayMs));
+  if (!wiz.active) return;
+  wiz.toneStartedAt = performance.now();
+  if (!isCatch){
+    if (state.wizard.options.flashOn) document.getElementById('wizStage').classList.add('flash');
+    wizardPlayTone(cell.freq, cell.ear, level);
+  }
+  const remaining = Math.max(2000, 6000 - wiz.currentTrial.delayMs + 2000);
+  wiz.pressTimer = setTimeout(() => wizardOnTimeout(), remaining);
+}
+
+function wizardOnUserPress(){
+  if (!wiz.active || !wiz.currentTrial || wiz.awaitingAnswer) return;
+  if (wiz.currentTrial.pressed) return;
+  const now = performance.now();
+  wiz.currentTrial.pressed = true;
+  wiz.currentTrial.rtMs = wiz.toneStartedAt ? Math.round(now - wiz.toneStartedAt) : null;
+  if (wiz.pressTimer){ clearTimeout(wiz.pressTimer); wiz.pressTimer = null; }
+  document.getElementById('wizHearBtn').style.display = 'none';
+  document.getElementById('wizInstruction').textContent = `Gehoord! Reactietijd: ${wiz.currentTrial.rtMs} ms`;
+  document.getElementById('wizBig').textContent = '✓';
+  wizardCommitTrial();
+  setTimeout(() => wizardNextTrial(), 800);
+}
+
+function wizardOnTimeout(){
+  if (!wiz.active || !wiz.currentTrial) return;
+  if (wiz.currentTrial.pressed) return;
+  if (state.wizard.options.askConfirm){
+    wiz.awaitingAnswer = true;
+    showModal('Hoorde u een toon?', 'Er werd geen druk geregistreerd. Hoorde u iets of niet?');
+  } else {
+    // direct: not heard
+    wiz.currentTrial.postAnswer = false;
+    document.getElementById('wizHearBtn').style.display = 'none';
+    document.getElementById('wizInstruction').textContent = 'Niet gehoord op dit niveau.';
+    document.getElementById('wizBig').textContent = '×';
+    wizardCommitTrial();
+    setTimeout(() => wizardNextTrial(), 600);
+  }
+}
+
+function wizardOnAnswer(yes){
+  if (!wiz.awaitingAnswer || !wiz.currentTrial) return;
+  wiz.currentTrial.postAnswer = yes;
+  wiz.awaitingAnswer = false;
+  hideModal();
+  document.getElementById('wizHearBtn').style.display = 'none';
+  document.getElementById('wizInstruction').textContent = yes ? 'Achteraf gemeld: gehoord (grensgeval)' : 'Niet gehoord op dit niveau.';
+  document.getElementById('wizBig').textContent = yes ? '~' : '×';
+  wizardCommitTrial();
+  setTimeout(() => wizardNextTrial(), 800);
+}
+
+function wizardCommitTrial(){
+  const t = wiz.currentTrial;
+  const key = t.ear + '_' + t.freq;
+  if (t.catch){
+    state.wizard.catchTrials++;
+    if (t.pressed && t.rtMs > 0) state.wizard.catchPressed++;
+    wiz.currentTrial = null;
+    return;
+  }
+  state.wizard.trials[key].push({
+    level: t.level, delayMs: Math.round(t.delayMs),
+    pressed: t.pressed, rtMs: t.rtMs, postAnswer: t.postAnswer,
+  });
+  const cs = wiz.cellState[key];
+  cs.trialCount++;
+  const hit = (t.pressed && t.rtMs != null && t.rtMs > 0 && t.rtMs < 3000) || t.postAnswer === true;
+  if (hit){
+    if (cs.lastHitLevel === t.level) cs.consecutiveHits++;
+    else { cs.consecutiveHits = 1; cs.lastHitLevel = t.level; }
+    if (cs.consecutiveHits >= 2){
+      state.wizard.thresholds[key] = t.level;
+      delete state.wizard.partial[key];
+      cs.done = true;
+    } else {
+      cs.level = Math.max(0, t.level - 10);
+    }
+  } else {
+    cs.consecutiveHits = 0;
+    cs.lastHitLevel = null;
+    cs.level = Math.min(100, t.level + 10);
+    if (cs.level >= 100 && cs.trialCount >= 4){
+      state.wizard.thresholds[key] = 100;
+      delete state.wizard.partial[key];
+      cs.done = true;
+    }
+  }
+  if (cs.trialCount >= 14 && !cs.done){
+    state.wizard.thresholds[key] = cs.lastHitLevel != null ? cs.lastHitLevel : cs.level;
+    delete state.wizard.partial[key];
+    cs.done = true;
+  }
+  wiz.currentTrial = null;
+}
+
+function wizardComputeResults(){
+  state.wizard.avgRT = state.wizard.avgRT || {};
+  for (const key in state.wizard.trials){
+    const arr = state.wizard.trials[key].filter(t => t.pressed && t.rtMs > 0 && t.rtMs < 3000);
+    if (arr.length === 0){ state.wizard.avgRT[key] = null; continue; }
+    state.wizard.avgRT[key] = Math.round(arr.reduce((s,t)=>s+t.rtMs, 0) / arr.length);
+  }
+}
+
+function wizardFinish(){
+  wiz.active = false;
+  if (wiz.durationTimer){ clearTimeout(wiz.durationTimer); wiz.durationTimer = null; }
+  if (wiz.countdownTimer){ clearInterval(wiz.countdownTimer); wiz.countdownTimer = null; }
+  document.getElementById('wizStart').disabled = false;
+  document.getElementById('wizStop').disabled = true;
+  document.getElementById('wizHearBtn').style.display = 'none';
+  document.querySelectorAll('input[name="wizMode"]').forEach(r => r.disabled = false);
+  ['optFlash','optAskConfirm','optMaxDur','optMaxDurNum'].forEach(id => { const el = document.getElementById(id); if (el) el.disabled = false; });
+  document.getElementById('wizMetaTop').textContent = 'Voltooid';
+  document.getElementById('wizInstruction').textContent = '🎉 Wizard-test voltooid! Bekijk je audiogram en kies een vervormings-modus.';
+  document.getElementById('wizBig').textContent = '✓';
+  document.getElementById('wizMetaBottom').textContent = '';
+  wizardComputeResults();
+  saveState();
+  renderReport();
+  wizardRenderProgress();
+}
+
+function wizardRenderProgress(){
+  const prog = document.getElementById('wizProgress');
+  prog.innerHTML = '';
+  wizardCells().forEach(c => {
+    const key = c.ear+'_'+c.freq;
+    const cs = wiz.cellState[key];
+    const dot = document.createElement('div');
+    dot.className = 'dot';
+    if (cs && cs.done) dot.classList.add('done');
+    else if (wiz.currentTrial && wiz.currentTrial.ear === c.ear && wiz.currentTrial.freq === c.freq) dot.classList.add('curr');
+    else if (state.wizard.partial && state.wizard.partial[key]) dot.classList.add('partial');
+    dot.title = `${earLabel(c.ear)} ${c.freq>=1000?(c.freq/1000)+'k':c.freq}Hz`;
+    prog.appendChild(dot);
+  });
+}
+
+function wizardReset(){
+  if (!confirm('Wizard-test resetten? Alle reactietijd-data wordt gewist.')) return;
+  state.wizard = { mode: state.wizard.mode, trials:{}, thresholds:{}, avgRT:{}, partial:{}, catchTrials:0, catchPressed:0 };
+  saveState();
+  wizardBuildQueue();
+  document.getElementById('wizInstruction').textContent = 'Klik op "Start wizard-test" om te beginnen.';
+  document.getElementById('wizBig').textContent = '';
+  document.getElementById('wizMetaTop').textContent = 'Niet gestart';
+  wizardRenderProgress();
+  renderReport();
+}
+
+/* ====================================================================
+   MODAL
+   ==================================================================== */
+function showModal(title, text){
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalText').textContent = text;
+  document.getElementById('modalBackdrop').classList.add('active');
+}
+function hideModal(){
+  document.getElementById('modalBackdrop').classList.remove('active');
+}
+
+/* ====================================================================
+   AUDIOGRAM + REPORT
+   ==================================================================== */
+function classify(pct){
+  if (pct == null) return {label:'—', cls:''};
+  if (pct <= 20) return {label:'normaal', cls:'normal'};
+  if (pct <= 40) return {label:'licht verminderd', cls:'licht'};
+  if (pct <= 60) return {label:'matig verminderd', cls:'matig'};
+  if (pct <= 80) return {label:'ernstig verminderd', cls:'ernstig'};
+  return {label:'zwaar verminderd', cls:'zwaar'};
+}
+
+function bestThreshold(ear, freq){
+  const w = state.wizard.thresholds[ear+'_'+freq];
+  if (w != null) return { value: w, source: 'wizard', partial: !!state.wizard.partial[ear+'_'+freq] };
+  const m = state.thresholds[ear+'_'+freq];
+  if (m != null) return { value: m, source: 'manual', partial: false };
+  return null;
+}
+
+/* For audiograms/reports we want all three ears to be plotted */
+function allEars(){ return ['L', 'R', 'B']; }
+
+function drawAudiogram(canvas){
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const PAD_L=60, PAD_R=20, PAD_T=20, PAD_B=50;
+  const plotW = W - PAD_L - PAD_R, plotH = H - PAD_T - PAD_B;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#0a1422'; ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle = '#374151'; ctx.lineWidth = 1; ctx.fillStyle = '#9ca3af'; ctx.font = '12px system-ui';
+
+  const xMin = Math.log10(8), xMax = Math.log10(22000);
+  const xFor = f => PAD_L + ((Math.log10(f) - xMin) / (xMax - xMin)) * plotW;
+  const yFor = pct => PAD_T + (pct/100) * plotH;
+
+  ALL_FREQS.forEach(f => {
+    const x = xFor(f);
+    ctx.strokeStyle = '#1f2937';
+    ctx.beginPath(); ctx.moveTo(x, PAD_T); ctx.lineTo(x, PAD_T + plotH); ctx.stroke();
+    ctx.fillStyle = '#9ca3af'; ctx.textAlign = 'center';
+    ctx.fillText(f >= 1000 ? (f/1000)+'k' : f, x, H - PAD_B + 16);
+  });
+  ctx.textAlign='center'; ctx.fillText('Frequentie (Hz)', PAD_L + plotW/2, H - 10);
+
+  for (let p=0;p<=100;p+=20){
+    const y = yFor(p);
+    ctx.strokeStyle = '#1f2937';
+    ctx.beginPath(); ctx.moveTo(PAD_L, y); ctx.lineTo(PAD_L+plotW, y); ctx.stroke();
+    ctx.fillStyle = '#9ca3af'; ctx.textAlign = 'right';
+    ctx.fillText(p+'%', PAD_L - 8, y + 4);
+  }
+  ctx.save(); ctx.translate(15, PAD_T + plotH/2); ctx.rotate(-Math.PI/2); ctx.textAlign='center';
+  ctx.fillText('Drempel (lager = beter)', 0, 0); ctx.restore();
+  ctx.strokeStyle = '#374151'; ctx.strokeRect(PAD_L, PAD_T, plotW, plotH);
+
+  allEars().forEach(ear => {
+    const color = earColor(ear);
+    ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 2;
+    let prev = null, prevPartial = false;
+    ALL_FREQS.forEach(f => {
+      const bt = bestThreshold(ear, f);
+      if (!bt){ prev = null; return; }
+      const v = bt.value;
+      const isPartial = bt.partial;
+      const x = xFor(f), y = yFor(v);
+      ctx.beginPath();
+      if (bt.source === 'wizard'){
+        if (ear === 'L'){ ctx.arc(x,y,6,0,Math.PI*2); }
+        else if (ear === 'R'){ ctx.moveTo(x-6,y-6); ctx.lineTo(x+6,y+6); ctx.moveTo(x+6,y-6); ctx.lineTo(x-6,y+6); }
+        else { // B: filled triangle
+          ctx.moveTo(x, y-7); ctx.lineTo(x+7, y+5); ctx.lineTo(x-7, y+5); ctx.closePath();
+        }
+      } else {
+        ctx.moveTo(x,y-7); ctx.lineTo(x+7,y); ctx.lineTo(x,y+7); ctx.lineTo(x-7,y); ctx.closePath();
+      }
+      if (ear === 'B' && bt.source === 'wizard') ctx.fill(); else ctx.stroke();
+      if (prev){
+        ctx.beginPath();
+        if (isPartial || prevPartial) ctx.setLineDash([4, 4]); else ctx.setLineDash([]);
+        ctx.moveTo(prev.x, prev.y); ctx.lineTo(x, y); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      prev = { x, y }; prevPartial = isPartial;
+    });
+  });
+}
+
+function drawRTChart(canvas){
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const PAD_L=60, PAD_R=20, PAD_T=20, PAD_B=40;
+  const plotW = W - PAD_L - PAD_R, plotH = H - PAD_T - PAD_B;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#0a1422'; ctx.fillRect(0,0,W,H);
+
+  const xMin = Math.log10(8), xMax = Math.log10(22000);
+  const xFor = f => PAD_L + ((Math.log10(f) - xMin) / (xMax - xMin)) * plotW;
+  const yFor = ms => PAD_T + plotH - (Math.min(ms, 2000) / 2000) * plotH;
+
+  ctx.strokeStyle = '#374151'; ctx.fillStyle = '#9ca3af'; ctx.font = '12px system-ui';
+  for (let ms=0;ms<=2000;ms+=500){
+    const y = yFor(ms);
+    ctx.strokeStyle = '#1f2937';
+    ctx.beginPath(); ctx.moveTo(PAD_L, y); ctx.lineTo(PAD_L+plotW, y); ctx.stroke();
+    ctx.fillStyle = '#9ca3af'; ctx.textAlign='right';
+    ctx.fillText(ms+' ms', PAD_L-8, y+4);
+  }
+  FREQS.forEach(f => {
+    const x = xFor(f);
+    ctx.strokeStyle = '#1f2937';
+    ctx.beginPath(); ctx.moveTo(x, PAD_T); ctx.lineTo(x, PAD_T+plotH); ctx.stroke();
+    ctx.fillStyle = '#9ca3af'; ctx.textAlign='center';
+    ctx.fillText(f >= 1000 ? (f/1000)+'k' : f, x, H-PAD_B+16);
+  });
+  ctx.strokeStyle = '#374151'; ctx.strokeRect(PAD_L, PAD_T, plotW, plotH);
+
+  allEars().forEach(ear => {
+    const color = earColor(ear);
+    ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 2;
+    let prev = null;
+    FREQS.forEach(f => {
+      const rt = state.wizard.avgRT[ear+'_'+f];
+      if (rt == null){ prev = null; return; }
+      const x = xFor(f), y = yFor(rt);
+      ctx.beginPath(); ctx.arc(x,y,5,0,Math.PI*2); ctx.fill();
+      if (prev){ ctx.beginPath(); ctx.moveTo(prev.x,prev.y); ctx.lineTo(x,y); ctx.stroke(); }
+      prev = { x, y };
+    });
+  });
+}
+
+function activeEarsInData(){
+  const ears = [];
+  ['L', 'R', 'B'].forEach(e => {
+    const has = FREQS.some(f => bestThreshold(e, f) != null);
+    if (has) ears.push(e);
+  });
+  return ears.length ? ears : ['L', 'R'];
+}
+
+function renderReportTable(){
+  const wrap = document.getElementById('reportTableWrap');
+  const ears = activeEarsInData();
+  let html = '<table><thead><tr><th>Frequentie</th>';
+  ears.forEach(e => html += `<th>${earLabel(e)} drempel</th><th>${earLabel(e)} RT</th>`);
+  html += '<th>Indicatie</th></tr></thead><tbody>';
+  // Filter: only show rows where at least one ear has data
+  ALL_FREQS.forEach(f => {
+    const hasAny = ears.some(e => bestThreshold(e, f) != null);
+    if (!hasAny) return;
+    let row = `<td>${f>=1000?(f/1000)+' kHz':f+' Hz'}</td>`;
+    const vals = [];
+    ears.forEach(e => {
+      const bt = bestThreshold(e, f);
+      const rt = state.wizard.avgRT[e+'_'+f];
+      if (bt){
+        const partialTag = bt.partial ? ' <span class="pill partial">partial</span>' : '';
+        row += `<td>${bt.value}% <small style="color:var(--muted)">(${bt.source})</small>${partialTag}</td>`;
+        vals.push(bt.value);
+      } else row += `<td>—</td>`;
+      row += `<td>${rt==null?'—':rt+' ms'}</td>`;
+    });
+    const worst = vals.length ? classify(Math.max.apply(null, vals)) : { label: '—', cls: '' };
+    row += `<td><span class="pill ${worst.cls}">${worst.label}</span></td>`;
+    html += `<tr>${row}</tr>`;
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+function renderReport(){
+  const ac = document.getElementById('audiogramCanvas');
+  if (ac) drawAudiogram(ac);
+  const rt = document.getElementById('rtCanvas');
+  if (rt) drawRTChart(rt);
+  renderReportTable();
+
+  const rel = document.getElementById('reliability');
+  if (rel){
+    if (state.wizard.catchTrials === 0) rel.textContent = 'nog geen catch-trials';
+    else {
+      const fpr = state.wizard.catchPressed / state.wizard.catchTrials;
+      let txt = `${state.wizard.catchPressed} false positives op ${state.wizard.catchTrials} controle-trials (${(fpr*100).toFixed(0)}%)`;
+      if (fpr > 0.3) txt += ' — LAGE betrouwbaarheid (te vaak gegokt)';
+      else if (fpr > 0.15) txt += ' — matige betrouwbaarheid';
+      else txt += ' — goede betrouwbaarheid';
+      rel.textContent = txt;
+    }
+  }
+
+  const conclEl = document.getElementById('conclusion');
+  if (conclEl){
+    const all = [];
+    const partialCount = Object.keys(state.wizard.partial || {}).length;
+    FREQS.forEach(f => allEars().forEach(e => { const t = bestThreshold(e,f); if (t) all.push(t.value); }));
+    if (all.length === 0){ conclEl.innerHTML = '<em>Nog geen metingen verricht.</em>'; return; }
+    const avg = all.reduce((s,v)=>s+v,0)/all.length;
+    const high = FREQS.slice(-3).flatMap(f => allEars().map(e => bestThreshold(e,f)?.value)).filter(v => v != null);
+    const low = FREQS.slice(0,3).flatMap(f => allEars().map(e => bestThreshold(e,f)?.value)).filter(v => v != null);
+    const avgHigh = high.length ? high.reduce((s,v)=>s+v,0)/high.length : null;
+    const avgLow = low.length ? low.reduce((s,v)=>s+v,0)/low.length : null;
+    let txt = `<p><strong>Gemiddelde drempel:</strong> ${avg.toFixed(0)}%.</p>`;
+    if (partialCount > 0) txt += `<p style="color:var(--warn)"><strong>${partialCount} partial-meting${partialCount===1?'':'en'}</strong> (test gestopt voor convergentie) — drempels zijn schattingen. Hertest voor zekere waarden.</p>`;
+    if (avgHigh != null && avgLow != null){
+      if (avgHigh - avgLow > 20) txt += `<p>Hoge frequenties (${avgHigh.toFixed(0)}%) duidelijk slechter dan lage (${avgLow.toFixed(0)}%). Past bij <strong>presbyacusis</strong> of lawaai-trauma.</p>`;
+      else if (avgLow - avgHigh > 20) txt += `<p>Lage frequenties slechter — ongebruikelijk patroon. Hertest in stille ruimte.</p>`;
+      else txt += `<p>Drempels redelijk vlak over het spectrum.</p>`;
+    }
+    const lvals = FREQS.map(f=>bestThreshold('L',f)?.value).filter(v=>v!=null);
+    const rvals = FREQS.map(f=>bestThreshold('R',f)?.value).filter(v=>v!=null);
+    if (lvals.length && rvals.length){
+      const lAvg = lvals.reduce((s,v)=>s+v,0)/lvals.length;
+      const rAvg = rvals.reduce((s,v)=>s+v,0)/rvals.length;
+      if (Math.abs(lAvg - rAvg) > 15) txt += `<p>Asymmetrie L/R: ${lAvg.toFixed(0)}% vs ${rAvg.toFixed(0)}%. Vraag advies bij audicien.</p>`;
+    }
+    const bvals = FREQS.map(f=>bestThreshold('B',f)?.value).filter(v=>v!=null);
+    if (bvals.length){
+      txt += `<p>Speakers-meting beschikbaar (geen L/R-onderscheid mogelijk) — gemiddelde drempel ${(bvals.reduce((s,v)=>s+v,0)/bvals.length).toFixed(0)}%.</p>`;
+    }
+    const allRT = Object.values(state.wizard.avgRT || {}).filter(v => v != null);
+    if (allRT.length){
+      const avgRTms = allRT.reduce((s,v)=>s+v,0)/allRT.length;
+      txt += `<p>Gemiddelde reactietijd: ${avgRTms.toFixed(0)} ms`;
+      if (avgRTms > 800) txt += ' — relatief traag; tonen waren mogelijk dicht bij drempel.';
+      else if (avgRTms < 400) txt += ' — snelle reactie; tonen duidelijk waarneembaar.';
+      txt += '.</p>';
+    }
+    txt += `<p style="color:var(--muted)"><em>Disclaimer: indicatief, niet-medisch. Voor diagnose: audicien of KNO.</em></p>`;
+    conclEl.innerHTML = txt;
+  }
+  refreshAutoProfileDisplay();
+}
+
+/* ====================================================================
+   PDF / JSON EXPORT
+   ==================================================================== */
+async function exportPDF(){
+  if (!window.jspdf){
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    await new Promise(r => { s.onload = r; document.head.appendChild(s); });
+  }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(18); doc.text('HearHorse — gehoortest rapport', 14, 18);
+  doc.setFontSize(10); doc.setTextColor(100);
+  doc.text('v0.0.6-Bunch · ' + new Date().toLocaleString('nl-NL'), 14, 25);
+  doc.setTextColor(0);
+
+  const ac = document.getElementById('audiogramCanvas');
+  doc.addImage(ac.toDataURL('image/png'), 'PNG', 14, 32, 180, 84);
+
+  let y = 124;
+  doc.setFontSize(11); doc.text('Resultaten per frequentie', 14, y); y += 6;
+  doc.setFontSize(9);
+  const ears = activeEarsInData();
+  // simple header
+  let xPos = 14;
+  doc.text('Freq', xPos, y); xPos += 22;
+  ears.forEach(e => { doc.text(earLabel(e), xPos, y); xPos += 28; });
+  doc.text('Indicatie', xPos, y);
+  y += 3; doc.line(14, y, 196, y); y += 5;
+
+  FREQS.forEach(f => {
+    let x = 14;
+    doc.text(f>=1000?(f/1000)+' kHz':f+' Hz', x, y); x += 22;
+    const vals = [];
+    ears.forEach(e => {
+      const bt = bestThreshold(e, f);
+      if (bt){
+        doc.text(bt.value + '%' + (bt.partial ? '(p)' : ''), x, y);
+        vals.push(bt.value);
+      } else doc.text('—', x, y);
+      x += 28;
+    });
+    const worst = vals.length ? classify(Math.max.apply(null, vals)) : { label: '—' };
+    doc.text(worst.label, x, y);
+    y += 5;
+  });
+
+  if (state.wizard.catchTrials > 0){
+    y += 4;
+    const fpr = (state.wizard.catchPressed/state.wizard.catchTrials*100).toFixed(0);
+    doc.text(`Betrouwbaarheid: ${state.wizard.catchPressed}/${state.wizard.catchTrials} false positives (${fpr}%)`, 14, y);
+    y += 5;
+  }
+  const partialCount = Object.keys(state.wizard.partial || {}).length;
+  if (partialCount > 0){
+    doc.text(`${partialCount} partial meting(en) — test gestopt voor convergentie.`, 14, y);
+    y += 5;
+  }
+
+  y += 4;
+  doc.setFontSize(8); doc.setTextColor(120);
+  doc.text('Geen medisch hulpmiddel. Indicatief instrument. Voor diagnose: audicien of KNO.', 14, y);
+
+  doc.save('hearhorse-rapport-' + new Date().toISOString().slice(0,10) + '.pdf');
+}
+
+function exportJSON(){
+  const blob = new Blob([JSON.stringify({
+    schema: 'hearhorse-audiogram-v3',
+    version: '0.0.4-Stevens',
+    timestamp: new Date().toISOString(),
+    thresholds: state.thresholds,
+    wizard: state.wizard,
+    bands: state.bands,
+  }, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'hearhorse-audiogram-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+}
+
+function importJSON(file){
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const d = JSON.parse(e.target.result);
+      if (!['hearhorse-audiogram-v1','hearhorse-audiogram-v2','hearhorse-audiogram-v3'].includes(d.schema)) throw new Error('Onbekend schema');
+      if (d.thresholds) state.thresholds = d.thresholds;
+      if (d.wizard){
+        state.wizard = Object.assign(state.wizard, d.wizard);
+        if (!state.wizard.partial) state.wizard.partial = {};
+        if (!state.wizard.mode) state.wizard.mode = 'headphones';
+      }
+      if (d.bands) state.bands = d.bands;
+      saveState();
+      buildTestGrid();
+      renderReport();
+      renderBands();
+      wizardBuildQueue();
+      wizardRenderProgress();
+      alert('Import gelukt.');
+    } catch(err){ alert('Import gefaald: ' + err.message); }
+  };
+  reader.readAsText(file);
+}
+
+/* ====================================================================
+   SPEECH RECORDING + PROCESSING
+   ==================================================================== */
+let mediaRecorder = null, recChunks = [];
+
+async function recStart(){
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+    recChunks = [];
+    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recChunks.push(e.data); };
+    mediaRecorder.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+      state.recordedBlob = new Blob(recChunks, { type: 'audio/webm' });
+      document.getElementById('audioOrig').src = URL.createObjectURL(state.recordedBlob);
+      document.getElementById('recStatus').textContent = 'Opname klaar (' + Math.round(state.recordedBlob.size/1024) + ' KB)';
+      document.getElementById('btnProcess').disabled = false;
+    };
+    mediaRecorder.start();
+    document.getElementById('recStatus').textContent = 'Opname loopt...';
+    document.getElementById('recStart').disabled = true;
+    document.getElementById('recStop').disabled = false;
+    setTimeout(() => { if (mediaRecorder && mediaRecorder.state === 'recording') recStop(); }, 30000);
+  } catch(e){ alert('Microfoon-toegang geweigerd of niet beschikbaar.'); }
+}
+
+function recStop(){
+  if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+  document.getElementById('recStart').disabled = false;
+  document.getElementById('recStop').disabled = true;
+}
+
+async function decodeRecordedBuffer(){
+  const buf = await state.recordedBlob.arrayBuffer();
+  const tempCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const audioBuf = await tempCtx.decodeAudioData(buf);
+  tempCtx.close();
+  return audioBuf;
+}
+
+async function processAudiogramMode(audioBuf){
+  const offline = new OfflineAudioContext(audioBuf.numberOfChannels, audioBuf.length, audioBuf.sampleRate);
+  const src = offline.createBufferSource(); src.buffer = audioBuf;
+  let node = src;
+  FREQS.forEach(f => {
+    // Aggregate over all ears (L, R, B) where available
+    const vals = allEars().map(e => bestThreshold(e, f)?.value).filter(v => v != null);
+    if (vals.length === 0) return;
+    const avg = vals.reduce((s,v)=>s+v,0)/vals.length;
+    const gainDb = Math.min(24, avg * 0.24);
+    if (gainDb < 1) return;
+    const filter = offline.createBiquadFilter();
+    filter.type='peaking'; filter.frequency.value=f; filter.Q.value=1.0; filter.gain.value=gainDb;
+    node.connect(filter); node = filter;
+  });
+  const out = offline.createGain(); out.gain.value=0.8;
+  node.connect(out).connect(offline.destination);
+  src.start();
+  return await offline.startRendering();
+}
+
+async function processSingleShiftMode(audioBuf){
+  const semis = parseInt(document.getElementById('shiftSemis').value, 10);
+  const rate = Math.pow(2, semis/12);
+  const newLength = Math.ceil(audioBuf.length / rate);
+  const offline = new OfflineAudioContext(audioBuf.numberOfChannels, newLength, audioBuf.sampleRate);
+  const src = offline.createBufferSource(); src.buffer = audioBuf;
+  src.playbackRate.value = rate;
+  src.connect(offline.destination);
+  src.start();
+  return await offline.startRendering();
+}
+
+async function processMultiBandMode(audioBuf, bandsOverride){
+  const bands = bandsOverride || state.bands;
+  if (bands.length === 0) return audioBuf;
+  const offline = new OfflineAudioContext(audioBuf.numberOfChannels, audioBuf.length, audioBuf.sampleRate);
+  const src = offline.createBufferSource(); src.buffer = audioBuf;
+  let node = src;
+  bands.filter(b => b.type === 'boost').forEach(b => {
+    const filter = offline.createBiquadFilter();
+    filter.type='peaking'; filter.frequency.value=b.freq; filter.Q.value=1.0; filter.gain.value=b.value;
+    node.connect(filter); node = filter;
+  });
+  const mainGain = offline.createGain(); mainGain.gain.value = 0.7;
+  node.connect(mainGain).connect(offline.destination);
+  src.start();
+  const firstPass = await offline.startRendering();
+
+  const shiftBands = bands.filter(b => b.type === 'shift' && Math.abs(b.value) > 0);
+  if (shiftBands.length === 0) return firstPass;
+
+  const finalCtx = new OfflineAudioContext(firstPass.numberOfChannels, firstPass.length, firstPass.sampleRate);
+  const baseSrc = finalCtx.createBufferSource(); baseSrc.buffer = firstPass;
+  baseSrc.connect(finalCtx.destination); baseSrc.start();
+
+  for (const b of shiftBands){
+    const semis = b.value;
+    const rate = Math.pow(2, semis/12);
+    const isoCtx = new OfflineAudioContext(audioBuf.numberOfChannels, audioBuf.length, audioBuf.sampleRate);
+    const isoSrc = isoCtx.createBufferSource(); isoSrc.buffer = audioBuf;
+    const bp = isoCtx.createBiquadFilter();
+    bp.type='bandpass'; bp.frequency.value = b.freq; bp.Q.value = 2.0;
+    isoSrc.connect(bp).connect(isoCtx.destination);
+    isoSrc.start();
+    const isoBuf = await isoCtx.startRendering();
+    const shiftLen = Math.ceil(isoBuf.length / rate);
+    const shCtx = new OfflineAudioContext(isoBuf.numberOfChannels, shiftLen, isoBuf.sampleRate);
+    const shSrc = shCtx.createBufferSource(); shSrc.buffer = isoBuf;
+    shSrc.playbackRate.value = rate;
+    const g = shCtx.createGain(); g.gain.value = 0.5;
+    shSrc.connect(g).connect(shCtx.destination);
+    shSrc.start();
+    const shBuf = await shCtx.startRendering();
+    const mixSrc = finalCtx.createBufferSource(); mixSrc.buffer = shBuf;
+    const mixG = finalCtx.createGain(); mixG.gain.value = 0.5;
+    mixSrc.connect(mixG).connect(finalCtx.destination);
+    mixSrc.start();
+  }
+  return await finalCtx.startRendering();
+}
+
+function computeAutoProfile(){
+  const profile = [];
+  FREQS.forEach(f => {
+    const vals = allEars().map(e => bestThreshold(e, f)?.value).filter(v=>v!=null);
+    if (vals.length === 0) return;
+    const avg = vals.reduce((s,v)=>s+v,0)/vals.length;
+    const rts = allEars().map(e => state.wizard.avgRT[e+'_'+f]).filter(v=>v!=null);
+    const avgRt = rts.length ? rts.reduce((s,v)=>s+v,0)/rts.length : null;
+    let comfortPenalty = avg / 100;
+    if (avgRt != null && avgRt > 800) comfortPenalty += (avgRt - 800)/1500;
+    comfortPenalty = Math.min(1.5, comfortPenalty);
+    if (comfortPenalty > 0.35){
+      const boostDb = Math.round(Math.min(20, comfortPenalty * 18));
+      if (boostDb > 1) profile.push({ freq: f, type: 'boost', value: boostDb });
+    }
+  });
+  const hfBoosts = profile.filter(b => b.freq >= 6000 && b.value >= 14);
+  if (hfBoosts.length >= 2){
+    profile.push({ freq: 6000, type: 'shift', value: -5 });
+  }
+  return profile;
+}
+
+function refreshAutoProfileDisplay(){
+  const el = document.getElementById('autoProfileDisplay');
+  if (!el) return;
+  const hasAny = Object.keys(state.wizard.thresholds).length > 0 || Object.keys(state.thresholds).length > 0;
+  if (!hasAny){
+    el.textContent = 'Nog geen wizard- of manual-data. Voer eerst een test uit.';
+    return;
+  }
+  const p = computeAutoProfile();
+  if (p.length === 0){ el.textContent = 'Geen vervorming nodig — gehoor lijkt vlak en goed.'; return; }
+  el.innerHTML = p.map(b => {
+    const sign = b.value > 0 ? '+' : '';
+    return `· <strong>${b.freq>=1000?(b.freq/1000)+'k':b.freq} Hz</strong> ${b.type} ${sign}${b.value}${b.type==='boost'?' dB':' st'}`;
+  }).join('<br>');
+}
+
+async function processSpeech(){
+  if (!state.recordedBlob){ alert('Eerst opname maken.'); return; }
+  document.getElementById('btnProcess').disabled = true;
+  document.getElementById('recStatus').textContent = 'Verwerken...';
+  try {
+    const audioBuf = await decodeRecordedBuffer();
+    let rendered;
+    switch(state.speechMode){
+      case 'audiogram': rendered = await processAudiogramMode(audioBuf); break;
+      case 'single':    rendered = await processSingleShiftMode(audioBuf); break;
+      case 'multi':     rendered = await processMultiBandMode(audioBuf); break;
+      case 'auto':      rendered = await processMultiBandMode(audioBuf, computeAutoProfile()); break;
+    }
+    const wav = audioBufferToWav(rendered);
+    state.processedBlob = new Blob([wav], { type: 'audio/wav' });
+    document.getElementById('audioProcessed').src = URL.createObjectURL(state.processedBlob);
+    document.getElementById('btnDownload').disabled = false;
+    document.getElementById('recStatus').textContent = `Verwerkt (modus: ${state.speechMode}).`;
+  } catch(e){
+    document.getElementById('recStatus').textContent = 'Fout: ' + e.message;
+  }
+  document.getElementById('btnProcess').disabled = false;
+}
+
+function downloadProcessed(){
+  if (!state.processedBlob) return;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(state.processedBlob);
+  a.download = 'hearhorse-processed-' + Date.now() + '.wav';
+  a.click();
+}
+
+function audioBufferToWav(buffer){
+  const numCh = buffer.numberOfChannels;
+  const sr = buffer.sampleRate;
+  const len = buffer.length * numCh * 2 + 44;
+  const ab = new ArrayBuffer(len);
+  const view = new DataView(ab);
+  function w(s, off){ for (let i=0;i<s.length;i++) view.setUint8(off+i, s.charCodeAt(i)); }
+  w('RIFF', 0); view.setUint32(4, len - 8, true); w('WAVE', 8);
+  w('fmt ', 12); view.setUint32(16, 16, true); view.setUint16(20, 1, true);
+  view.setUint16(22, numCh, true); view.setUint32(24, sr, true);
+  view.setUint32(28, sr * numCh * 2, true); view.setUint16(32, numCh * 2, true);
+  view.setUint16(34, 16, true);
+  w('data', 36); view.setUint32(40, len - 44, true);
+  let off = 44;
+  const channels = [];
+  for (let i=0;i<numCh;i++) channels.push(buffer.getChannelData(i));
+  for (let i=0;i<buffer.length;i++){
+    for (let c=0;c<numCh;c++){
+      let s = Math.max(-1, Math.min(1, channels[c][i]));
+      view.setInt16(off, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+      off += 2;
+    }
+  }
+  return ab;
+}
+
+/* ====================================================================
+   BAND EDITOR
+   ==================================================================== */
+function renderBands(){
+  const c = document.getElementById('bandsContainer');
+  if (!c) return;
+  c.innerHTML = '';
+  state.bands.forEach((b, idx) => {
+    const row = document.createElement('div');
+    row.className = 'band-row';
+    row.innerHTML = `
+      <span class="lbl">#${idx+1}</span>
+      <div><label>Freq (Hz)</label><input type="number" min="60" max="16000" step="10" value="${b.freq}" data-i="${idx}" data-k="freq" /></div>
+      <div><label>Type</label>
+        <select data-i="${idx}" data-k="type">
+          <option value="boost" ${b.type==='boost'?'selected':''}>boost (dB)</option>
+          <option value="shift" ${b.type==='shift'?'selected':''}>shift (semis)</option>
+        </select>
+      </div>
+      <div><label>Waarde</label><input type="number" min="-24" max="24" step="1" value="${b.value}" data-i="${idx}" data-k="value" /></div>
+      <button class="bad" data-i="${idx}" data-k="del">✕</button>
+    `;
+    c.appendChild(row);
+  });
+  c.querySelectorAll('input,select').forEach(el => {
+    el.addEventListener('change', e => {
+      const i = parseInt(e.target.dataset.i, 10);
+      const k = e.target.dataset.k;
+      if (!state.bands[i]) return;
+      let v = e.target.value;
+      if (e.target.tagName === 'INPUT' && e.target.type === 'number') v = parseFloat(v);
+      state.bands[i][k] = v;
+      saveState();
+    });
+  });
+  c.querySelectorAll('button[data-k="del"]').forEach(b => {
+    b.addEventListener('click', e => {
+      const i = parseInt(e.target.dataset.i, 10);
+      state.bands.splice(i, 1);
+      saveState();
+      renderBands();
+    });
+  });
+}
+
+function addBand(){
+  state.bands.push({ freq: 2000, type: 'boost', value: 6 });
+  saveState();
+  renderBands();
+}
+
+function updateSpeechModeUI(){
+  ['audiogram','single','multi','auto'].forEach(m => {
+    const el = document.getElementById('mode' + m.charAt(0).toUpperCase() + m.slice(1));
+    if (el) el.style.display = (m === state.speechMode) ? 'block' : 'none';
+  });
+  if (state.speechMode === 'auto') refreshAutoProfileDisplay();
+  if (state.speechMode === 'multi') renderBands();
+}
+
+/* ====================================================================
+   TAB SWITCHING
+   ==================================================================== */
+function switchTab(name, tabEl){
+  if (tabEl) document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t === tabEl));
+  else document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name && !t.dataset.set));
+  document.querySelectorAll('.panel-section').forEach(p => p.classList.toggle('active', p.id === 'panel-' + name));
+  if (name === 'report') renderReport();
+  if (name === 'speech') updateSpeechModeUI();
+  if (name === 'manual'){
+    buildTestGrid();
+    const isRef = state.manualFreqSet === 'reference';
+    const h = document.getElementById('manualHeading');
+    const intro = document.getElementById('manualIntro');
+    const note = document.getElementById('manualStandardsNote');
+    if (h) h.textContent = isRef ? 'Referentie-modus (ISO 8253-1 standaard)' : 'Speciaal — volledig spectrum 10 Hz – 20 kHz';
+    if (intro) intro.textContent = isRef
+      ? 'Klinische standaard puretone-audiometrie: 11 frequenties op de ISO 8253-1 / ANSI S3.21 standaard. Per oor (links/rechts/beide samen) selecteer je een cel, gebruik slider/getal of presets om de drempel te bepalen.'
+      : 'Uitgebreid spectrum 10 Hz – 20 kHz (21 frequenties): sub-bas 10-120 Hz voor laag-frequentie-screening + extended high-frequency tot 20 kHz voor jongere oren en presbyacusis-detectie.';
+    if (note) note.textContent = isRef
+      ? 'Standaard PTA-banden: 125-8000 Hz octaaf-stappen + halve octaven (750/1500/3000/6000 Hz) voor interpolatie. Bron: ISO 8253-1:2010 — Acoustics — Audiometric test methods.'
+      : 'Geen klinische standaard — uitgebreide research-/screening-set. Inclusief sub-audible (10-20 Hz, voor de meeste mensen niet hoorbaar) en extended HF (12-20 kHz, hoorbaarheid neemt af met leeftijd).';
+  }
+  if (name !== 'manual'){ testStopTone(); calStopTone(); state.currentTest = null; updateManualUI(); }
+}
+
+/* ====================================================================
+   INIT
+   ==================================================================== */
+function init(){
+  loadState();
+  buildTestGrid();
+  updateManualUI();
+  renderBands();
+  // restore mode-toggle
+  const modeInput = document.querySelector(`input[name="wizMode"][value="${state.wizard.mode}"]`);
+  if (modeInput) modeInput.checked = true;
+  wizardBuildQueue();
+  wizardRenderProgress();
+  updateSpeechModeUI();
+  renderReport();
+
+  document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+    if (t.dataset.set){
+      state.manualFreqSet = t.dataset.set;
+      saveState();
+    }
+    switchTab(t.dataset.tab, t);
+  }));
+
+  // wizard mode toggle
+  document.querySelectorAll('input[name="wizMode"]').forEach(r => r.addEventListener('change', e => {
+    state.wizard.mode = e.target.value;
+    saveState();
+    wizardBuildQueue();
+    wizardRenderProgress();
+    document.getElementById('wizInstruction').textContent =
+      state.wizard.mode === 'speakers'
+        ? 'Speakers-mode actief — beide oren samen getest. Klik "Start wizard-test".'
+        : 'Hoofdtelefoon-mode actief — L en R apart. Klik "Start wizard-test".';
+  }));
+
+  // calibration
+  document.getElementById('calStart').addEventListener('click', () => calPlayTone('calStatus'));
+  document.getElementById('calStop').addEventListener('click', () => { calStopTone(); document.getElementById('calStatus').textContent='Niet gestart'; });
+  document.getElementById('wizCalStart').addEventListener('click', () => calPlayTone('wizCalStatus'));
+  document.getElementById('wizCalStop').addEventListener('click', () => { calStopTone(); document.getElementById('wizCalStatus').textContent='Stel je volume in op comfortabel zacht'; });
+
+  // manual controls
+  document.getElementById('btnLouder').addEventListener('click', () => adjustLevel(+1));
+  document.getElementById('btnQuieter').addEventListener('click', () => adjustLevel(-1));
+  document.getElementById('btnToneToggle').addEventListener('click', toggleManualTone);
+  document.getElementById('levelSlider').addEventListener('input', e => setManualLevel(parseInt(e.target.value, 10)));
+  document.getElementById('levelNum').addEventListener('change', e => {
+    let v = parseInt(e.target.value, 10); if (isNaN(v)) v = 1;
+    setManualLevel(v);
+  });
+  document.getElementById('btnHear').addEventListener('click', recordHearManual);
+  document.getElementById('btnSkip').addEventListener('click', skipCellManual);
+  document.getElementById('btnReset').addEventListener('click', resetAllManual);
+  document.getElementById('btnGoReport').addEventListener('click', () => switchTab('report'));
+
+  // wizard
+  document.getElementById('wizStart').addEventListener('click', wizardStart);
+  document.getElementById('wizStop').addEventListener('click', wizardStop);
+  document.getElementById('wizReset').addEventListener('click', wizardReset);
+  document.getElementById('wizHearBtn').addEventListener('click', wizardOnUserPress);
+  document.getElementById('modalYes').addEventListener('click', () => wizardOnAnswer(true));
+  document.getElementById('modalNo').addEventListener('click', () => wizardOnAnswer(false));
+
+  // report
+  document.getElementById('btnPdf').addEventListener('click', exportPDF);
+  document.getElementById('btnJsonExport').addEventListener('click', exportJSON);
+  document.getElementById('btnJsonImport').addEventListener('click', () => document.getElementById('fileImport').click());
+  document.getElementById('fileImport').addEventListener('change', e => { if (e.target.files[0]) importJSON(e.target.files[0]); });
+
+  // speech
+  document.querySelectorAll('input[name="speechMode"]').forEach(r => r.addEventListener('change', e => {
+    state.speechMode = e.target.value;
+    saveState();
+    updateSpeechModeUI();
+  }));
+  document.getElementById('shiftSemis').addEventListener('input', e => {
+    document.getElementById('shiftSemisNum').value = e.target.value;
+  });
+  document.getElementById('shiftSemisNum').addEventListener('change', e => {
+    let v = parseInt(e.target.value, 10);
+    if (isNaN(v)) v = 0;
+    v = Math.max(-12, Math.min(12, v));
+    document.getElementById('shiftSemis').value = v;
+    document.getElementById('shiftSemisNum').value = v;
+  });
+  document.getElementById('btnAddBand').addEventListener('click', addBand);
+
+  // manual presets
+  document.querySelectorAll('.preset-btn').forEach(b => b.addEventListener('click', e => {
+    setManualLevel(parseInt(e.target.dataset.level, 10));
+  }));
+
+  // wizard options
+  const optFlash = document.getElementById('optFlash');
+  optFlash.checked = state.wizard.options.flashOn;
+  optFlash.addEventListener('change', e => { state.wizard.options.flashOn = e.target.checked; saveState(); });
+  const optAsk = document.getElementById('optAskConfirm');
+  optAsk.checked = state.wizard.options.askConfirm;
+  optAsk.addEventListener('change', e => { state.wizard.options.askConfirm = e.target.checked; saveState(); });
+  const optDur = document.getElementById('optMaxDur');
+  const optDurNum = document.getElementById('optMaxDurNum');
+  optDur.value = state.wizard.options.maxDurationMin;
+  optDurNum.value = state.wizard.options.maxDurationMin;
+  optDur.addEventListener('input', e => {
+    optDurNum.value = e.target.value;
+    state.wizard.options.maxDurationMin = parseInt(e.target.value, 10);
+    saveState();
+  });
+  optDurNum.addEventListener('change', e => {
+    let v = parseInt(e.target.value, 10);
+    if (isNaN(v)) v = 10;
+    v = Math.max(1, Math.min(20, v));
+    optDur.value = v;
+    e.target.value = v;
+    state.wizard.options.maxDurationMin = v;
+    saveState();
+  });
+
+  document.getElementById('recStart').addEventListener('click', recStart);
+  document.getElementById('recStop').addEventListener('click', recStop);
+  document.getElementById('btnProcess').addEventListener('click', processSpeech);
+  document.getElementById('btnDownload').addEventListener('click', downloadProcessed);
+
+  // keyboard
+  document.addEventListener('keydown', e => {
+    if (wiz.active && e.code === 'Space' && !wiz.awaitingAnswer){
+      e.preventDefault(); wizardOnUserPress(); return;
+    }
+    if (!state.currentTest) return;
+    if (e.key === 'ArrowUp'){ e.preventDefault(); adjustLevel(+1); }
+    if (e.key === 'ArrowDown'){ e.preventDefault(); adjustLevel(-1); }
+    if (e.key === 'Enter'){ e.preventDefault(); recordHearManual(); }
+    if (e.key === 'Escape'){ e.preventDefault(); skipCellManual(); }
+  });
+
+  window.addEventListener('beforeunload', () => { testStopTone(); calStopTone(); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden){ testStopTone(); calStopTone(); } });
+}
+
+init();
+</script>
+</body>
+</html>
