@@ -1,9 +1,14 @@
 ---
 date: 2026-06-06
 repo: iCt_Horse
-status: open
-resume: "verder met HearHorse — v0.0.7-Pollack: live 2-weg WebRTC met tester/kandidaat rolverdeling (kandidaat krijgt alleen 'ik hoor het'-knop, tester ziet alle UI realtime + forceert opt.flashOn=false + opt.askConfirm=false bij kandidaat), hergebruik noisecanceling api.php-patroon, STUN-only. v0.0.6-Bunch LIVE met manual gesplitst in tab Referentie (ISO 8253-1 PTA 11 freqs) + tab Speciaal (10Hz-20kHz spectrum 21 freqs)."
+status: done
+resume: ""
 ---
+
+**HISTORISCH** — origineel newp HearHorse onder iCt_Horse. Project verhuisd naar eigen repo WatHoorIk + domein wathoorik.nl op 2026-06-06. Resume-haken zijn overgenomen in `WatHoorIk/prompts/2026-06-06_newp_wathoorik_verhuis.md`.
+
+---
+
 
 ## v0.0.3-Carhart LIVE 2026-06-06 18:45 UTC
 
