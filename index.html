@@ -104,11 +104,42 @@
   .mode-radio label{padding:8px 12px;background:var(--panel2);border-radius:8px;border:1px solid var(--line);cursor:pointer;font-size:13px}
   .mode-radio input{margin-right:6px}
   .mode-radio label:has(input:checked){border-color:var(--accent);background:#0b2c44}
+
+  /* Sticky linker label-kolom (leeg headcell + ear-labels) — actief bij overflow-x scroll */
+  .test-grid > .head.col-label,
+  .test-grid > .head.ear-l,
+  .test-grid > .head.ear-r,
+  .test-grid > .head.ear-b{position:sticky;left:0;background:var(--panel);z-index:2;border-right:1px solid var(--line)}
+
+  /* ===== Responsive: Z Fold 6 outer (<500px) + binnenscherm portret ===== */
+  @media (max-width: 700px){
+    body{padding:0}
+    main{padding:8px}
+    .card{padding:10px}
+    h1{font-size:20px}
+    h2{font-size:16px}
+    .test-grid{font-size:11px;gap:1px}
+    .test-grid .head, .test-grid .cell{min-width:28px}
+    .test-grid .cell{padding:8px 2px;min-height:32px}
+  }
+  @media (max-width: 420px){
+    /* Z Fold 6 outer cover (~404px) */
+    .test-grid{font-size:10px}
+    .test-grid .head, .test-grid .cell{min-width:24px}
+    .test-grid .cell{padding:8px 1px}
+    .wiz-stage{padding:14px;min-height:220px}
+    .wiz-instruction{font-size:15px}
+    .wiz-big{font-size:26px}
+    .band-row{grid-template-columns:auto 90px 90px 90px 50px;gap:4px}
+    .mode-toggle label{padding:6px;font-size:12px}
+    button{padding:8px 10px;font-size:13px}
+    h1{font-size:18px}
+  }
 </style>
 </head>
 <body>
 <header>
-  <h1>Wat Hoor Ik? <span style="color:var(--muted);font-size:14px;font-weight:400">v0.0.6-Bunch</span></h1>
+  <h1>Wat Hoor Ik? <span style="color:var(--muted);font-size:14px;font-weight:400">v0.0.7-Hood</span></h1>
   <div class="sub">Self-administered gehoortest met reactietijd + compenserende spraak-vervorming · alles in je browser, niets naar een server · <a href="https://icthorse.nl/" target="_blank" rel="noopener">made by iCt Horse</a></div>
 </header>
 
@@ -178,6 +209,15 @@
       </div>
       <div class="row" style="margin-top:8px">
         <label><input type="checkbox" id="optAskConfirm" checked /> 💬 Bevestiging vragen na 6 sec <small style="color:var(--muted)">— uit = direct "niet gehoord", sneller en oog-blind</small></label>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <label><input type="checkbox" id="optStepHW" /> 📊 Klinieke modus Hughson-Westlake <small style="color:var(--muted)">— asymmetrisch 10↓ na hit / 5↑ na miss (standaard: symmetrisch 10/10)</small></label>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <label><input type="checkbox" id="optOnsetJitter" checked /> 🎲 Onset-randomisatie <small style="color:var(--muted)">— toon-duur 0.8-1.2s + delay 1.5-7s (anti-timing-gokken)</small></label>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <label><input type="checkbox" id="optMaskContra" /> 🔇 Auto-maskering contralateraal <small style="color:var(--muted)">— narrow-band ruis op betere oor bij L/R-asymmetrie >40% (Hood-techniek)</small></label>
       </div>
     </div>
   </section>
@@ -346,14 +386,21 @@
         <li><strong>Partial:</strong> bij Stop worden niet-bevestigde cellen met ≥1 hit opgeslagen met laatst-gehoorde-niveau als schatting (gemarkeerd in audiogram met stippellijn).</li>
       </ul>
       <h2 style="margin-top:14px">Versie</h2>
-      <p>v0.0.6-Bunch — Cyril G. Bunch (eerste klinische audiogram 1923, inrichter PTA-conventies). Voorgangers: Békésy → Fletcher → Carhart → Stevens → Munson.</p>
+      <p>v0.0.7-Hood — Paul Hood (Britse audioloog, jaren '50; ontwierp de plateau-techniek voor klinische maskering bij asymmetrisch gehoorverlies — onmisbaar onderdeel van moderne puretone-audiometrie). Voorgangers: Békésy → Fletcher → Carhart → Stevens → Munson → Bunch.</p>
+      <h2 style="margin-top:14px">Nieuw in v0.0.7-Hood</h2>
+      <ul>
+        <li><strong>Hughson-Westlake klinieke modus</strong> (toggle): asymmetrisch 10↓/5↑ i.p.v. symmetrisch 10/10.</li>
+        <li><strong>Onset-randomisatie</strong>: toon-duur 0.8-1.2 s + delay 1.5-7 s — voorkomt timing-gokken.</li>
+        <li><strong>Contralaterale maskering</strong>: narrow-band ruis op betere oor bij L/R-asymmetrie &gt;40 % (Hood-techniek, automatisch wanneer beide oor-drempels bekend zijn).</li>
+        <li><strong>Z Fold 6 / smal-scherm responsive</strong>: sticky L/R/B-label-kolom + krimpende cel-breedte op &lt;420 px.</li>
+      </ul>
       <h2 style="margin-top:14px">Bron</h2>
       <p><strong><a href="https://wathoorik.nl/">wathoorik.nl</a></strong> · open source op <a href="https://github.com/cpaglebbeek/WatHoorIk" target="_blank" rel="noopener">github.com/cpaglebbeek/WatHoorIk</a> · AGPL-3.0 · made by <a href="https://icthorse.nl/" target="_blank" rel="noopener">iCt Horse</a> · alle data blijft in je browser.</p>
     </div>
   </section>
 
   <footer>
-    Wat Hoor Ik? · v0.0.6-Bunch · © 2026 · open source AGPL-3.0 · <a href="https://github.com/cpaglebbeek/WatHoorIk" style="color:var(--muted)">GitHub</a> · alle data blijft lokaal in je browser
+    Wat Hoor Ik? · v0.0.7-Hood · © 2026 · open source AGPL-3.0 · <a href="https://github.com/cpaglebbeek/WatHoorIk" style="color:var(--muted)">GitHub</a> · alle data blijft lokaal in je browser
   </footer>
 </main>
 
@@ -370,7 +417,7 @@
 
 <script>
 /* ====================================================================
-   HearHorse v0.0.6-Bunch
+   HearHorse v0.0.7-Hood
    ==================================================================== */
 
 const FREQS = [125, 250, 500, 1000, 2000, 4000, 6000, 8000];
@@ -398,6 +445,9 @@ const state = {
       flashOn: true,               // green flash on tone-play
       askConfirm: true,            // modal after 6s timeout
       maxDurationMin: 10,          // hard cap
+      stepMode: 'percent',         // 'percent' (−10/+10) | 'hw' (Hughson-Westlake −10/+5 dB-stijl)
+      onsetJitter: true,           // randomise tone-duration + delay-range (anti-timing)
+      maskContra: false,           // narrow-band noise op contralateraal oor bij asymmetrie >40%
     },
   },
   currentTest: null,
@@ -429,10 +479,13 @@ function loadState(){
     if (d.thresholds) state.thresholds = d.thresholds;
     if (d.wizard) state.wizard = Object.assign(state.wizard, d.wizard);
     if (!state.wizard.partial) state.wizard.partial = {};
-    if (!state.wizard.options) state.wizard.options = { flashOn: true, askConfirm: true, maxDurationMin: 10 };
+    if (!state.wizard.options) state.wizard.options = { flashOn: true, askConfirm: true, maxDurationMin: 10, stepMode: 'percent', onsetJitter: true, maskContra: false };
     if (state.wizard.options.flashOn == null) state.wizard.options.flashOn = true;
     if (state.wizard.options.askConfirm == null) state.wizard.options.askConfirm = true;
     if (state.wizard.options.maxDurationMin == null) state.wizard.options.maxDurationMin = 10;
+    if (state.wizard.options.stepMode == null) state.wizard.options.stepMode = 'percent';
+    if (state.wizard.options.onsetJitter == null) state.wizard.options.onsetJitter = true;
+    if (state.wizard.options.maskContra == null) state.wizard.options.maskContra = false;
     if (d.bands) state.bands = d.bands;
     if (d.manualFreqSet) state.manualFreqSet = d.manualFreqSet;
   } catch(e){}
@@ -512,10 +565,38 @@ function testStopTone(){
   if (testPan){ testPan.disconnect(); testPan = null; }
 }
 
-function wizardPlayTone(freq, ear, levelPct){
+/**
+ * Bereken of contralaterale maskering nodig is.
+ * Asymmetrie >40% punten (≈ klinisch 40 dB) tussen L/R op zelfde freq → mask betere oor.
+ * Mask-niveau = ~50% van test-niveau (ruwe approximatie van klinische "narrow-band 30-40 dB onder testtoon").
+ * Geldt alleen voor wizard headphones-mode (L/R apart). Niet bij speakers-mode (ear='B').
+ */
+function computeMaskOpts(ear, freq, levelPct){
+  if (!state.wizard.options.maskContra) return null;
+  if (ear === 'B') return null;
+  const contraEar = ear === 'L' ? 'R' : 'L';
+  const myKey = ear + '_' + freq;
+  const contraKey = contraEar + '_' + freq;
+  // schattingen: definitieve threshold of voorlopige hint via cellState
+  const myEst = state.wizard.thresholds[myKey] != null ? state.wizard.thresholds[myKey]
+    : (wiz.cellState[myKey] && wiz.cellState[myKey].lastHitLevel);
+  const contraEst = state.wizard.thresholds[contraKey] != null ? state.wizard.thresholds[contraKey]
+    : (wiz.cellState[contraKey] && wiz.cellState[contraKey].lastHitLevel);
+  if (myEst == null || contraEst == null) return null;
+  // We testen oor `ear`; maskeer alleen als getest-oor SLECHTER is (hoger niveau nodig)
+  // én verschil >40%. Anders geen masking nodig.
+  if (myEst - contraEst <= 40) return null;
+  // Mask-level = max(contraEst+10, levelPct*0.5) — net boven contra-drempel, max half van testtoon
+  const maskLevelPct = Math.min(80, Math.max(contraEst + 10, Math.round(levelPct * 0.5)));
+  return { maskEar: contraEar, maskLevelPct };
+}
+
+function wizardPlayTone(freq, ear, levelPct, opts){
   const ctx = getCtx();
   const now = ctx.currentTime;
-  const dur = 1.0;
+  // onset-randomisatie: toon-duur jitter tussen 0.8-1.2s (anti-timing)
+  const jitter = state.wizard.options.onsetJitter;
+  const dur = jitter ? (0.8 + Math.random() * 0.4) : 1.0;
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   const pan = ctx.createStereoPanner();
@@ -530,7 +611,44 @@ function wizardPlayTone(freq, ear, levelPct){
   osc.connect(gain).connect(pan).connect(ctx.destination);
   osc.start(now);
   osc.stop(now + dur + 0.02);
+  // optionele contralaterale maskering (Hood-techniek)
+  let maskStop = null;
+  if (opts && opts.maskEar && opts.maskLevelPct > 0){
+    maskStop = playMaskNoise(ctx, now, dur, freq, opts.maskEar, opts.maskLevelPct);
+  }
   return new Promise(resolve => setTimeout(resolve, dur*1000 + 20));
+}
+
+// Narrow-band noise voor contralaterale maskering. Returns stop-fn.
+function playMaskNoise(ctx, startAt, dur, centerFreq, ear, levelPct){
+  // witte ruis-buffer (1s, mono) — eenmalig genereren en hergebruiken voor performance
+  if (!window._maskBuf){
+    const sr = ctx.sampleRate;
+    const buf = ctx.createBuffer(1, sr, sr);
+    const ch = buf.getChannelData(0);
+    for (let i = 0; i < sr; i++) ch[i] = Math.random() * 2 - 1;
+    window._maskBuf = buf;
+  }
+  const src = ctx.createBufferSource();
+  src.buffer = window._maskBuf;
+  src.loop = true;
+  // bandpass rond test-freq, Q=4 (narrow band ~1/3 octaaf)
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass';
+  bp.frequency.value = centerFreq;
+  bp.Q.value = 4;
+  const g = ctx.createGain();
+  const p = ctx.createStereoPanner();
+  p.pan.value = earPan(ear);
+  const peak = levelToGain(levelPct);
+  g.gain.setValueAtTime(0, startAt);
+  g.gain.linearRampToValueAtTime(peak, startAt + 0.05);
+  g.gain.setValueAtTime(peak, startAt + dur - 0.05);
+  g.gain.linearRampToValueAtTime(0, startAt + dur);
+  src.connect(bp).connect(g).connect(p).connect(ctx.destination);
+  src.start(startAt);
+  src.stop(startAt + dur + 0.02);
+  return () => { try { src.stop(); } catch(e){} };
 }
 
 /* ====================================================================
@@ -540,9 +658,12 @@ function buildTestGrid(){
   const grid = document.getElementById('testGrid');
   if (!grid) return;
   const freqs = currentManualFreqs();
-  grid.style.gridTemplateColumns = `70px repeat(${freqs.length}, minmax(0, 1fr))`;
+  // Label-kolom krimpt op kleine schermen; cellen min-breedte tegen overlap.
+  const labelW = window.innerWidth < 420 ? 44 : window.innerWidth < 700 ? 54 : 70;
+  const cellMin = window.innerWidth < 420 ? 24 : window.innerWidth < 700 ? 28 : 30;
+  grid.style.gridTemplateColumns = `${labelW}px repeat(${freqs.length}, minmax(${cellMin}px, 1fr))`;
   grid.innerHTML = '';
-  const empty = document.createElement('div'); empty.className = 'head'; grid.appendChild(empty);
+  const empty = document.createElement('div'); empty.className = 'head col-label'; grid.appendChild(empty);
   freqs.forEach(f => {
     const c = document.createElement('div');
     c.className = 'head';
@@ -718,7 +839,7 @@ function wizardStart(){
   document.getElementById('wizMetaTop').textContent = 'Test gestart (' + (state.wizard.mode === 'speakers' ? '🔊 speakers' : '🎧 hoofdtelefoon') + ')';
   // disable mode-toggle and options during run
   document.querySelectorAll('input[name="wizMode"]').forEach(r => r.disabled = true);
-  ['optFlash','optAskConfirm','optMaxDur','optMaxDurNum'].forEach(id => { const el = document.getElementById(id); if (el) el.disabled = true; });
+  ['optFlash','optAskConfirm','optMaxDur','optMaxDurNum','optStepHW','optOnsetJitter','optMaskContra'].forEach(id => { const el = document.getElementById(id); if (el) el.disabled = true; });
   // hard timer
   const maxMs = (state.wizard.options.maxDurationMin || 10) * 60 * 1000;
   wiz.durationTimer = setTimeout(() => {
@@ -748,7 +869,7 @@ function wizardStop(){
   document.getElementById('wizStop').disabled = true;
   document.getElementById('wizHearBtn').style.display = 'none';
   document.querySelectorAll('input[name="wizMode"]').forEach(r => r.disabled = false);
-  ['optFlash','optAskConfirm','optMaxDur','optMaxDurNum'].forEach(id => { const el = document.getElementById(id); if (el) el.disabled = false; });
+  ['optFlash','optAskConfirm','optMaxDur','optMaxDurNum','optStepHW','optOnsetJitter','optMaskContra'].forEach(id => { const el = document.getElementById(id); if (el) el.disabled = false; });
   // Save partial results: unfinished cells with ≥1 hit get lastHitLevel as estimate
   let partialCount = 0, savedCount = 0;
   for (const key in wiz.cellState){
@@ -783,10 +904,13 @@ async function wizardNextTrial(){
   const isCatch = Math.random() < 0.10;
   const cs = wiz.cellState[cell.ear+'_'+cell.freq];
   const level = isCatch ? 0 : cs.level;
+  // onset-randomisatie: bredere delay-spread voorkomt timing-gokken
+  const jitter = state.wizard.options.onsetJitter;
+  const delayMs = jitter ? (1500 + Math.random() * 5500) : (1000 + Math.random() * 5000);
   wiz.currentTrial = {
     ear: cell.ear, freq: cell.freq, level,
     catch: isCatch,
-    delayMs: 1000 + Math.random() * 5000,
+    delayMs,
     pressed: false, rtMs: null, postAnswer: null,
   };
   wiz.trialIdx++;
@@ -806,7 +930,7 @@ async function wizardNextTrial(){
   wiz.toneStartedAt = performance.now();
   if (!isCatch){
     if (state.wizard.options.flashOn) document.getElementById('wizStage').classList.add('flash');
-    wizardPlayTone(cell.freq, cell.ear, level);
+    wizardPlayTone(cell.freq, cell.ear, level, computeMaskOpts(cell.ear, cell.freq, level));
   }
   const remaining = Math.max(2000, 6000 - wiz.currentTrial.delayMs + 2000);
   wiz.pressTimer = setTimeout(() => wizardOnTimeout(), remaining);
@@ -884,7 +1008,8 @@ function wizardCommitTrial(){
   } else {
     cs.consecutiveHits = 0;
     cs.lastHitLevel = null;
-    cs.level = Math.min(100, t.level + 10);
+    const upStep = state.wizard.options.stepMode === 'hw' ? 5 : 10;
+    cs.level = Math.min(100, t.level + upStep);
     if (cs.level >= 100 && cs.trialCount >= 4){
       state.wizard.thresholds[key] = 100;
       delete state.wizard.partial[key];
@@ -916,7 +1041,7 @@ function wizardFinish(){
   document.getElementById('wizStop').disabled = true;
   document.getElementById('wizHearBtn').style.display = 'none';
   document.querySelectorAll('input[name="wizMode"]').forEach(r => r.disabled = false);
-  ['optFlash','optAskConfirm','optMaxDur','optMaxDurNum'].forEach(id => { const el = document.getElementById(id); if (el) el.disabled = false; });
+  ['optFlash','optAskConfirm','optMaxDur','optMaxDurNum','optStepHW','optOnsetJitter','optMaskContra'].forEach(id => { const el = document.getElementById(id); if (el) el.disabled = false; });
   document.getElementById('wizMetaTop').textContent = 'Voltooid';
   document.getElementById('wizInstruction').textContent = '🎉 Wizard-test voltooid! Bekijk je audiogram en kies een vervormings-modus.';
   document.getElementById('wizBig').textContent = '✓';
@@ -1214,7 +1339,7 @@ async function exportPDF(){
   const doc = new jsPDF();
   doc.setFontSize(18); doc.text('HearHorse — gehoortest rapport', 14, 18);
   doc.setFontSize(10); doc.setTextColor(100);
-  doc.text('v0.0.6-Bunch · ' + new Date().toLocaleString('nl-NL'), 14, 25);
+  doc.text('v0.0.7-Hood · ' + new Date().toLocaleString('nl-NL'), 14, 25);
   doc.setTextColor(0);
 
   const ac = document.getElementById('audiogramCanvas');
@@ -1270,7 +1395,7 @@ async function exportPDF(){
 function exportJSON(){
   const blob = new Blob([JSON.stringify({
     schema: 'hearhorse-audiogram-v3',
-    version: '0.0.4-Stevens',
+    version: '0.0.7-Hood',
     timestamp: new Date().toISOString(),
     thresholds: state.thresholds,
     wizard: state.wizard,
@@ -1730,6 +1855,15 @@ function init(){
     state.wizard.options.maxDurationMin = v;
     saveState();
   });
+  const optStepHW = document.getElementById('optStepHW');
+  optStepHW.checked = state.wizard.options.stepMode === 'hw';
+  optStepHW.addEventListener('change', e => { state.wizard.options.stepMode = e.target.checked ? 'hw' : 'percent'; saveState(); });
+  const optOnsetJitter = document.getElementById('optOnsetJitter');
+  optOnsetJitter.checked = state.wizard.options.onsetJitter;
+  optOnsetJitter.addEventListener('change', e => { state.wizard.options.onsetJitter = e.target.checked; saveState(); });
+  const optMaskContra = document.getElementById('optMaskContra');
+  optMaskContra.checked = state.wizard.options.maskContra;
+  optMaskContra.addEventListener('change', e => { state.wizard.options.maskContra = e.target.checked; saveState(); });
 
   document.getElementById('recStart').addEventListener('click', recStart);
   document.getElementById('recStop').addEventListener('click', recStop);
@@ -1750,6 +1884,12 @@ function init(){
 
   window.addEventListener('beforeunload', () => { testStopTone(); calStopTone(); });
   document.addEventListener('visibilitychange', () => { if (document.hidden){ testStopTone(); calStopTone(); } });
+  // Z Fold 6 oriëntatieswitch / fold-unfold → grid herrendert met juiste label-kolom-breedte
+  let resizeTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => buildTestGrid(), 150);
+  });
 }
 
 init();
